@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>감정 카메라 - 나의 감정 앨범</title>
+    
+    <!-- Scripts for React, Tailwind and Lucide Icons -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide 아이콘 라이브러리 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-yellow-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect, memo, useLayoutEffect } = React;
+        
+        // 아이콘 컴포넌트: Lucide 아이콘을 안전하게 렌더링
+        const Icon = memo(({ name, size = 24, className = "" }) => {
+            const iconRef = useRef(null);
+
+            const renderIcon = () => {
+                if (window.lucide && iconRef.current) {
+                    iconRef.current.innerHTML = `<i data-lucide="${name}"></i>`;
+                    window.lucide.createIcons({
+                        attrs: {
+                            width: size,
+                            height: size,
+                            class: className,
+                            stroke: "currentColor",
+                            "stroke-width": 2,
+                        },
+                        nameAttr: 'data-lucide',
+                        icons: window.lucide.icons
+                    });
+                }
+            };
+
+            useLayoutEffect(() => {
+                renderIcon();
+                const timer = setTimeout(renderIcon, 50);
+                return () => clearTimeout(timer);
+            }, [name, size, className]);
+
+            return <span ref={iconRef} className="inline-flex items-center justify-center" />;
+        });
+
+        /**
+         * [최종 업데이트된 기본 감정 목록]
+         * 요청하신 12가지 감정 데이터입니다.
+         */
+        const DEFAULT_EMOTIONS = [
+            { id: 1, name: '기뻐', emoji: '😊', desc: '기분이 아주 좋아져서 싱글벙글 웃음이 나요.' },
+            { id: 2, name: '사랑해', emoji: '😍', desc: '가족, 친구, 선생님을 아끼고 소중히 대하는 따뜻한 마음이에요.' },
+            { id: 3, name: '감동이야', emoji: '🥺', desc: '마음이 뭉클해지고 고마운 기분이 들어요.' },
+            { id: 4, name: '화나', emoji: '😡', desc: '마음대로 되지 않아 속상하고 기분이 나빠져요.' },
+            { id: 5, name: '미안해', emoji: '🙇', desc: '마음이 편하지 않고 부끄러운 기분이 들어요.' },
+            { id: 6, name: '슬퍼', emoji: '😭', desc: '눈물이 날 것 처럼 마음이 아파요.' },
+            { id: 7, name: '놀라워', emoji: '😲', desc: '어떤 일에 눈이 커지고 가슴이 두근거려요.' },
+            { id: 8, name: '궁금해', emoji: '🤔', desc: '이건 왜 그럴까? 호기심이 생겨서 알고 싶어져요.' },
+            { id: 9, name: '무서워', emoji: '😨', desc: '깜깜하거나 무서운 것을 보았을 때 드는 기분이에요.' },
+            { id: 10, name: '걱정돼', emoji: '😟', desc: '안 좋은 일이 생길까 봐 마음이 조마조마해요.' },
+            { id: 11, name: '부끄러워', emoji: '🫢', desc: '창피하거나 용기가 없어서 숨고 싶은 기분이에요.' },
+            { id: 12, name: '편안해', emoji: '😌', desc: '포근한 이불 속에 있는 것처럼 기분이 좋아요.' },
+        ];
+
+        const App = () => {
+            const [view, setView] = useState('camera'); 
+            const [emotions, setEmotions] = useState(() => {
+                const saved = localStorage.getItem('emo-camera-emotions');
+                return saved ? JSON.parse(saved) : DEFAULT_EMOTIONS;
+            });
+            const [selectedEmotionId, setSelectedEmotionId] = useState(() => {
+                const saved = localStorage.getItem('emo-camera-emotions');
+                const list = saved ? JSON.parse(saved) : DEFAULT_EMOTIONS;
+                return list[0]?.id || 1;
+            });
+            const [photos, setPhotos] = useState([]); 
+            
+            const [isCapturing, setIsCapturing] = useState(false);
+            const [countdown, setCountdown] = useState(null);
+            const [flash, setFlash] = useState(false);
+            const [currentCaptureResults, setCurrentCaptureResults] = useState(null); 
+            const [zoom, setZoom] = useState(100); 
+            
+            const videoRef = useRef(null);
+
+            const [showEmoForm, setShowEmoForm] = useState(false);
+            const [editingId, setEditingId] = useState(null);
+            const [newEmoName, setNewEmoName] = useState('');
+            const [newEmoEmoji, setNewEmoEmoji] = useState('');
+            const [newEmoDesc, setNewEmoDesc] = useState('');
+
+            const ASPECT_RATIO = 4 / 3;
+
+            useEffect(() => {
+                localStorage.setItem('emo-camera-emotions', JSON.stringify(emotions));
+            }, [emotions]);
+
+            const selectedEmotion = emotions.find(e => e.id === selectedEmotionId) || emotions[0];
+
+            useEffect(() => {
+                if (view === 'camera' && !currentCaptureResults) {
+                    startCamera();
+                }
+            }, [view, currentCaptureResults]);
+
+            const startCamera = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            aspectRatio: ASPECT_RATIO, 
+                            width: { ideal: 1280 },
+                            height: { ideal: 960 }
+                        } 
+                    });
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                    }
+                } catch (err) {
+                    console.error("카메라 연결 오류:", err);
+                }
+            };
+
+            const handleStartCapture = async () => {
+                if (isCapturing) return;
+                setIsCapturing(true);
+                const capturedImages = [];
+                const captureWidth = 800;
+                const captureHeight = 600;
+
+                for (let i = 0; i < 2; i++) {
+                    for (let c = 3; c > 0; c--) {
+                        setCountdown(c);
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                    setCountdown(null);
+                    setFlash(true);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = captureWidth;
+                    canvas.height = captureHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(videoRef.current, 0, 0, captureWidth, captureHeight);
+                    capturedImages.push(canvas.toDataURL('image/png'));
+                    setTimeout(() => setFlash(false), 150);
+                    await new Promise(r => setTimeout(r, 800));
+                }
+
+                const now = new Date();
+                const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                const results = {
+                    images: capturedImages,
+                    emotion: selectedEmotion.name,
+                    emoji: selectedEmotion.emoji,
+                    date: dateStr
+                };
+                
+                setCurrentCaptureResults(results);
+                setIsCapturing(false);
+                
+                const newEntry = {
+                    id: Date.now(),
+                    ...results
+                };
+                setPhotos(prev => [newEntry, ...prev]);
+            };
+
+            const downloadCollage = (data) => {
+                const { images, emotion, emoji, date } = data;
+                const canvas = document.createElement('canvas');
+                canvas.width = 840; 
+                canvas.height = 1440; 
+                const ctx = canvas.getContext('2d');
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#FBBF24';
+                ctx.fillRect(0, 0, canvas.width, 100);
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 44px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${emoji} ${emotion}`, canvas.width / 2, 55);
+
+                let loadedCount = 0;
+                images.forEach((imgSrc, i) => {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => {
+                        ctx.drawImage(img, 20, 120 + (i * 620), 800, 600);
+                        loadedCount++;
+                        if (loadedCount === images.length) {
+                            ctx.fillStyle = '#94A3B8';
+                            ctx.font = 'bold 24px sans-serif';
+                            ctx.textAlign = 'right';
+                            ctx.fillText(date, canvas.width - 40, canvas.height - 40);
+
+                            ctx.textAlign = 'left';
+                            ctx.fillStyle = '#FBBF24';
+                            ctx.fillText('📸 감정카메라', 40, canvas.height - 40);
+
+                            const link = document.createElement('a');
+                            link.download = `${emotion}_감정두컷_${Date.now()}.png`;
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                        }
+                    };
+                    img.src = imgSrc;
+                });
+            };
+
+            const deletePhoto = (id) => {
+                setPhotos(photos.filter(p => p.id !== id));
+            };
+
+            const saveEmotion = () => {
+                if (!newEmoName || !newEmoEmoji) return;
+                
+                if (editingId) {
+                    setEmotions(emotions.map(emo => 
+                        emo.id === editingId 
+                            ? { ...emo, name: newEmoName, emoji: newEmoEmoji, desc: newEmoDesc } 
+                            : emo
+                    ));
+                } else {
+                    const newId = Date.now();
+                    setEmotions([...emotions, { id: newId, name: newEmoName, emoji: newEmoEmoji, desc: newEmoDesc }]);
+                }
+                closeForm();
+            };
+
+            const startEditEmotion = (emo) => {
+                setEditingId(emo.id);
+                setNewEmoName(emo.name);
+                setNewEmoEmoji(emo.emoji);
+                setNewEmoDesc(emo.desc || '');
+                setShowEmoForm(true);
+            };
+
+            const closeForm = () => {
+                setEditingId(null);
+                setNewEmoName(''); 
+                setNewEmoEmoji(''); 
+                setNewEmoDesc('');
+                setShowEmoForm(false);
+            };
+
+            const deleteEmotion = (id) => {
+                if (emotions.length <= 1) return;
+                const updated = emotions.filter(e => e.id !== id);
+                setEmotions(updated);
+                if (selectedEmotionId === id) {
+                    setSelectedEmotionId(updated[0].id);
+                }
+            };
+
+            const resetEmotions = () => {
+                if (confirm('모든 감정 설정을 초기 상태로 되돌릴까요?')) {
+                    localStorage.removeItem('emo-camera-emotions');
+                    setEmotions(DEFAULT_EMOTIONS);
+                    setSelectedEmotionId(DEFAULT_EMOTIONS[0].id);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-yellow-50 text-slate-800 font-sans pb-10">
+                    <style>{`
+                        .mirror-video { transform: scaleX(-1); }
+                        .photo-frame {
+                            background: white;
+                            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+                        }
+                        input[type="range"]::-webkit-slider-thumb {
+                            -webkit-appearance: none;
+                            height: 20px;
+                            width: 20px;
+                            border-radius: 50%;
+                            background: #FBBF24;
+                            cursor: pointer;
+                        }
+                    `}</style>
+
+                    {showEmoForm && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-yellow-400 text-white">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <Icon name={editingId ? "edit-2" : "plus"} />
+                                        {editingId ? "감정 수정하기" : "새 감정 추가하기"}
+                                    </h3>
+                                    <button onClick={closeForm} className="p-1 hover:bg-white/20 rounded-lg transition"><Icon name="x" /></button>
+                                </div>
+                                <div className="p-8 space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 mb-1 ml-1 uppercase">감정 이름</label>
+                                        <input value={newEmoName} onChange={(e) => setNewEmoName(e.target.value)} placeholder="예: 기대됨" className="w-full p-4 bg-gray-50 border-none rounded-2xl focus:ring-2 ring-yellow-400 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 mb-1 ml-1 uppercase">이모티콘</label>
+                                        <input value={newEmoEmoji} onChange={(e) => setNewEmoEmoji(e.target.value)} placeholder="예: 🤩" className="w-full p-4 bg-gray-50 border-none rounded-2xl focus:ring-2 ring-yellow-400 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 mb-1 ml-1 uppercase">아이들을 위한 설명</label>
+                                        <textarea value={newEmoDesc} onChange={(e) => setNewEmoDesc(e.target.value)} placeholder="아이들이 이해하기 쉽게 설명해 주세요." rows="3" className="w-full p-4 bg-gray-50 border-none rounded-2xl focus:ring-2 ring-yellow-400 outline-none resize-none" />
+                                    </div>
+                                    <button onClick={saveEmotion} className="w-full py-4 bg-yellow-400 text-white font-black rounded-2xl shadow-lg shadow-yellow-100 hover:bg-yellow-500 transition-all active:scale-95 flex items-center justify-center gap-2 mt-4">
+                                        <Icon name="check" size={20} /> {editingId ? '수정 완료' : '추가하기'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+                        <h1 className="text-2xl font-black text-yellow-500 flex items-center gap-2 cursor-pointer" onClick={() => {setView('camera'); setCurrentCaptureResults(null)}}>
+                            <span className="text-3xl">📸</span> 감정카메라
+                        </h1>
+                        <div className="flex gap-4">
+                            <button onClick={() => {setView('camera'); setCurrentCaptureResults(null)}} className={`p-2 rounded-full transition ${view === 'camera' ? 'bg-yellow-100 text-yellow-600' : 'hover:bg-gray-100'}`} title="카메라">
+                                <Icon name="camera" />
+                            </button>
+                            <button onClick={() => setView('gallery')} className={`p-2 rounded-full transition ${view === 'gallery' ? 'bg-yellow-100 text-yellow-600' : 'hover:bg-gray-100'}`} title="앨범">
+                                <Icon name="image" />
+                            </button>
+                            <button onClick={() => setView('settings')} className={`p-2 rounded-full transition ${view === 'settings' ? 'bg-yellow-100 text-yellow-600' : 'hover:bg-gray-100'}`} title="설정">
+                                <Icon name="settings" />
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto p-4">
+                        {view === 'camera' && (
+                            <div className="flex flex-col gap-6">
+                                <div className="bg-white p-4 rounded-3xl shadow-sm overflow-x-auto">
+                                    <div className="flex gap-4 min-w-max pb-2">
+                                        {emotions.map((emo) => (
+                                            <button 
+                                                key={emo.id}
+                                                onClick={() => setSelectedEmotionId(emo.id)}
+                                                className={`flex flex-col items-center p-3 rounded-2xl transition-all ${selectedEmotionId === emo.id ? 'bg-yellow-400 text-white scale-110' : 'bg-gray-50 hover:bg-yellow-100'}`}
+                                            >
+                                                <span className="text-3xl mb-1">{emo.emoji}</span>
+                                                <span className="text-xs font-bold">{emo.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="mt-4 p-4 bg-yellow-50 rounded-2xl border-2 border-dashed border-yellow-200 text-center">
+                                        <span className="font-bold text-yellow-700">{selectedEmotion?.name}:</span> {selectedEmotion?.desc}
+                                    </div>
+                                </div>
+
+                                {!currentCaptureResults ? (
+                                    <div className="flex flex-col items-center gap-6">
+                                        <div 
+                                            className="relative aspect-[4/3] bg-black rounded-[40px] overflow-hidden border-8 border-white shadow-2xl transition-all duration-300"
+                                            style={{ width: `${zoom}%`, maxWidth: '100%' }}
+                                        >
+                                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover mirror-video" />
+                                            {countdown && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                    <span className="text-9xl font-black text-white animate-bounce drop-shadow-lg">{countdown}</span>
+                                                </div>
+                                            )}
+                                            {flash && <div className="absolute inset-0 bg-white animate-pulse z-40"></div>}
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+                                            {!isCapturing && (
+                                                <button 
+                                                    onClick={handleStartCapture}
+                                                    className="w-24 h-24 bg-white rounded-full border-8 border-yellow-400 flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-xl"
+                                                >
+                                                    <Icon name="camera" size={40} className="text-yellow-500" />
+                                                </button>
+                                            )}
+                                            <div className="w-full bg-white p-4 rounded-3xl shadow-sm flex items-center gap-3 border border-yellow-100">
+                                                <Icon name="maximize" size={18} className="text-yellow-400" />
+                                                <span className="text-xs font-bold text-gray-500 min-w-[60px]">화면 크기</span>
+                                                <input type="range" min="60" max="100" value={zoom} onChange={(e) => setZoom(e.target.value)} className="flex-1 accent-yellow-400 cursor-pointer" />
+                                                <span className="text-xs font-mono text-gray-400">{zoom}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center">
+                                        <h2 className="text-center text-3xl font-black mb-6 text-yellow-600">✨ 감정 두컷 완성! ✨</h2>
+                                        
+                                        <div className="photo-frame w-full max-w-xs md:max-w-sm overflow-hidden rounded-[20px] flex flex-col border-[12px] border-white">
+                                            <div className="bg-yellow-400 p-3 text-center text-white font-black flex items-center justify-center gap-2">
+                                                <span>{currentCaptureResults.emoji}</span>
+                                                <span>{currentCaptureResults.emotion}</span>
+                                            </div>
+                                            <div className="p-2 space-y-2 bg-gray-50">
+                                                {currentCaptureResults.images.map((src, idx) => (
+                                                    <img key={idx} src={src} className="w-full rounded-md shadow-inner" alt="captured" />
+                                                ))}
+                                            </div>
+                                            <div className="p-3 flex justify-between items-center text-[10px] font-bold text-slate-400 bg-white">
+                                                <span>📸 감정카메라</span>
+                                                <span>{currentCaptureResults.date}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-4 mt-8 w-full max-w-sm">
+                                            <button onClick={() => setCurrentCaptureResults(null)} className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"><Icon name="refresh-cw" /> 다시찍기</button>
+                                            <button onClick={() => downloadCollage(currentCaptureResults)} className="flex-1 py-4 bg-yellow-400 hover:bg-yellow-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-yellow-200 transition-all"><Icon name="download" /> 저장하기</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {view === 'gallery' && (
+                            <div className="flex flex-col gap-6">
+                                <h2 className="text-2xl font-bold flex items-center gap-2"><Icon name="image" className="text-yellow-500" /> 나의 감정 앨범</h2>
+                                {photos.length === 0 ? (
+                                    <div className="py-20 text-center text-gray-400 bg-white rounded-3xl border-2 border-dashed">아직 촬영된 사진이 없어요. 사진을 찍어보세요!</div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                                        {photos.map(p => (
+                                            <div key={p.id} className="photo-frame rounded-[24px] overflow-hidden flex flex-col border-[10px] border-white group relative">
+                                                <div className="bg-yellow-400 p-2 text-center text-white font-black text-sm flex items-center justify-center gap-1">
+                                                    <span>{p.emoji}</span>
+                                                    <span>{p.emotion}</span>
+                                                </div>
+                                                <div className="p-1.5 space-y-1.5 bg-gray-50 flex-1">
+                                                    {p.images.map((img, i) => <img key={i} src={img} className="w-full rounded-lg shadow-sm" alt="gallery" />)}
+                                                </div>
+                                                <div className="p-2 flex justify-between items-center text-[9px] font-bold text-slate-400 bg-white">
+                                                    <span>📸 감정카메라</span>
+                                                    <span>{p.date}</span>
+                                                </div>
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                                    <button onClick={() => downloadCollage(p)} className="p-3 bg-white rounded-full text-yellow-500 hover:scale-110 transition-transform"><Icon name="download" /></button>
+                                                    <button onClick={() => deletePhoto(p.id)} className="p-3 bg-white rounded-full text-red-500 hover:scale-110 transition-transform"><Icon name="trash-2" /></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {view === 'settings' && (
+                            <div className="max-w-2xl mx-auto">
+                                <div className="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-center mb-8 border-b border-gray-50 pb-6">
+                                        <div className="flex items-baseline gap-2">
+                                            <h3 className="text-2xl font-black text-yellow-600">등록된 감정</h3>
+                                            <span className="text-lg font-bold text-gray-300">(총 {emotions.length}개)</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={resetEmotions}
+                                                className="bg-gray-100 hover:bg-gray-200 text-gray-500 p-3 rounded-2xl transition-all active:scale-90"
+                                                title="초기화"
+                                            >
+                                                <Icon name="rotate-ccw" size={20} />
+                                            </button>
+                                            <button 
+                                                onClick={() => setShowEmoForm(true)}
+                                                className="bg-yellow-400 hover:bg-yellow-500 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-100 transition-all active:scale-90"
+                                            >
+                                                <Icon name="plus" size={28} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {emotions.map((emo) => (
+                                            <div key={emo.id} className="flex flex-col p-5 bg-gray-50 rounded-[24px]">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-3xl bg-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm">{emo.emoji}</span>
+                                                        <span className="font-black text-xl">{emo.name}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => startEditEmotion(emo)} className="p-3 text-blue-400 hover:bg-blue-50 rounded-xl transition">
+                                                            <Icon name="edit-2" />
+                                                        </button>
+                                                        <button onClick={() => deleteEmotion(emo.id)} className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition">
+                                                            <Icon name="trash-2" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                {emo.desc && (
+                                                    <div className="text-sm text-gray-500 bg-white/70 p-4 rounded-xl">
+                                                        {emo.desc}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="mt-8 p-6 bg-yellow-100/50 rounded-3xl text-sm text-yellow-800 text-center font-medium">
+                                    💡 여기서 수정된 내용은 이 브라우저에 자동으로 저장됩니다.
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
