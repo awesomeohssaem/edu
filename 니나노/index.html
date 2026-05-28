@@ -2,28 +2,42 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>[2026. 니나노] 보드게임 대여 관리</title>
-  <!-- Tailwind CSS & Lucide Icons -->
+  <!-- UI 프레임워크 및 아이콘 로드 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- React & Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    body { font-family: 'Pretendard', sans-serif; }
+    body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
     .animate-spin { animation: spin 1s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    @media (max-width: 639px) {
+      .desktop-table { display: none; }
+      .mobile-cards { display: block; }
+    }
+    @media (min-width: 640px) {
+      .desktop-table { display: table; width: 100%; }
+      .mobile-cards { display: none; }
+    }
+
+    .truncate-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // 아이콘 컴포넌트 헬퍼
     const Icon = ({ name, className }) => {
       useEffect(() => { lucide.createIcons(); }, [name]);
       return <i data-lucide={name} className={className}></i>;
@@ -33,47 +47,59 @@
       const [activeTab, setActiveTab] = useState('list');
       const [games, setGames] = useState([]);
       const [rentals, setRentals] = useState([]);
-      const [loading, setLoading] = useState(true);
+      const [loading, setLoading] = useState(false);
       const [searchTerm, setSearchTerm] = useState("");
       const [isModalOpen, setIsModalOpen] = useState(false);
+      const [isNoticeOpen, setIsNoticeOpen] = useState(true); // 시작 안내 팝업 상태
       const [selectedGame, setSelectedGame] = useState(null);
       const [rentalQty, setRentalQty] = useState(1);
       const [formData, setFormData] = useState({ name: "", affiliation: "", returnDate: "" });
       const [isSubmitting, setIsSubmitting] = useState(false);
+      const [statusMsg, setStatusMsg] = useState("");
 
-      // 데이터 로드 함수 (환경 체크 포함)
       const loadData = () => {
+        if (loading) return;
         setLoading(true);
-        
-        // 구글 서버 환경인지 체크 (ReferenceError 방지)
+        setStatusMsg("");
+
+        const safetyTimer = setTimeout(() => {
+          if (loading) {
+            setLoading(false);
+            setStatusMsg("연결 시간이 초과되었습니다. 다시 시도해 주세요.");
+          }
+        }, 10000);
+
         if (typeof google !== 'undefined' && google.script && google.script.run) {
           google.script.run
             .withSuccessHandler((json) => {
-              const data = JSON.parse(json);
-              setGames(data.games || []);
-              setRentals(data.rentals || []);
-              setLoading(false);
-              setTimeout(() => lucide.createIcons(), 100);
+              clearTimeout(safetyTimer);
+              try {
+                const data = JSON.parse(json);
+                setGames(data.games || []);
+                setRentals(data.rentals || []);
+              } catch (e) {
+                console.error("Data parse error:", e);
+                setStatusMsg("데이터 분석 중 오류가 발생했습니다.");
+              } finally {
+                setLoading(false);
+              }
             })
             .withFailureHandler((err) => {
-              console.error("데이터 로드 실패:", err);
+              clearTimeout(safetyTimer);
               setLoading(false);
+              console.error("GAS Error:", err);
+              setStatusMsg("구글 서버 연결 실패: 시트 권한을 확인하세요.");
             })
             .getData();
         } else {
-          // 구글 외부 환경(Canvas 미리보기 등)일 때 보여줄 데모 데이터
-          console.warn("구글 서버 환경이 아닙니다. 데모 데이터를 로드합니다.");
           setTimeout(() => {
+            clearTimeout(safetyTimer);
             setGames([
-              { name: "할리갈리 (데모)", school: "중앙관", total: 5, available: 3 },
-              { name: "루미큐브 (데모)", school: "본관", total: 3, available: 0 },
-              { name: "스플렌더 (데모)", school: "도서실", total: 4, available: 2 },
+              { name: "데칼코", school: "금곡중", total: 5, available: 3 },
+              { name: "마음의 실타래", school: "천전초", total: 3, available: 1 }
             ]);
-            setRentals([
-              { gameName: "루미큐브 (데모)", qty: 1, renter: "홍길동", dept: "니나노초", startDate: "2026-04-20", dueDate: "2026-04-27", status: "대여중" }
-            ]);
+            setRentals([{ gameName: "데칼코", qty: 2, renter: "오경서", dept: "천전초", startDate: "2026-04-27", dueDate: "2026-04-29", status: "대여중", school: "금곡중" }]);
             setLoading(false);
-            setTimeout(() => lucide.createIcons(), 100);
           }, 800);
         }
       };
@@ -83,270 +109,241 @@
       const today = new Date().toISOString().split('T')[0];
 
       const handleBorrow = () => {
+        if (!formData.name || !formData.returnDate) return alert("정보를 모두 입력해 주세요.");
         setIsSubmitting(true);
-        const payload = JSON.stringify({
-          ...formData,
-          gameName: selectedGame.name,
-          rentalQty: rentalQty,
-          startDate: today,
-          status: "대여중"
-        });
-
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
+        const payload = JSON.stringify({ ...formData, gameName: selectedGame.name, school: selectedGame.school, rentalQty, startDate: today });
+        
+        if (typeof google !== 'undefined') {
           google.script.run
             .withSuccessHandler(() => {
-              alert(`${selectedGame.name} ${rentalQty}개 대여 신청이 완료되었습니다.`);
+              alert(`${selectedGame.name} 대여 신청 완료!`);
               setIsModalOpen(false);
               setFormData({ name: "", affiliation: "", returnDate: "" });
-              setTimeout(loadData, 1500);
               setIsSubmitting(false);
+              setTimeout(loadData, 1500);
+            })
+            .withFailureHandler(() => {
+              setIsSubmitting(false);
+              alert("신청 중 오류가 발생했습니다.");
             })
             .postData(payload);
-        } else {
-          alert("데모 모드입니다. 실제 시트에 기록되지 않습니다.");
-          setIsSubmitting(false);
-          setIsModalOpen(false);
         }
       };
 
-      const filteredGames = games.filter(g => 
-        String(g.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(g.school).toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const filteredGames = games.filter(g => String(g.name + g.school).toLowerCase().includes(searchTerm.toLowerCase()));
+      const activeRentals = rentals.filter(r => !String(r.status).includes("반납"));
+      const filteredRentals = activeRentals.filter(r => String(r.gameName + r.renter).toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const filteredRentals = rentals.filter(r => 
-        String(r.gameName).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(r.renter).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(r.dept).toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const displayDate = (dateStr) => {
+        if (!dateStr) return "-";
+        return String(dateStr).split('T')[0].substring(5);
+      };
 
       return (
-        <div className="min-h-screen">
-          {/* 상단 네비게이션 */}
-          <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4">
-            <div className="max-w-5xl mx-auto">
+        <div className="min-h-screen pb-10">
+          <nav className="bg-white border-b sticky top-0 z-30 shadow-sm">
+            <div className="max-w-5xl mx-auto px-4">
               <div className="h-16 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-blue-600 font-bold text-xl">
-                  <Icon name="library" className="w-8 h-8" />
-                  <span class="hidden sm:inline">[2026. 니나노] 보드게임 대여 관리</span>
-                  <span class="sm:hidden">니나노 대여 관리</span>
+                <div className="flex items-center gap-2 text-blue-600 font-bold min-w-0">
+                  <Icon name="library" className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
+                  <span className="truncate text-lg sm:text-xl leading-tight">[2026. 니나노] 보드게임 관리</span>
                 </div>
-                <button onClick={loadData} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <button onClick={loadData} disabled={loading} className="p-2 hover:bg-slate-100 rounded-full flex-shrink-0 disabled:opacity-50 ml-2">
                   <Icon name="refresh-cw" className={`w-5 h-5 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
                 </button>
               </div>
-              <div className="flex gap-6 h-12">
-                <button 
-                  onClick={() => { setActiveTab('list'); setSearchTerm(""); }} 
-                  className={`px-1 border-b-2 font-bold text-sm transition-all ${activeTab === 'list' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}
-                >
-                  보드게임 목록
-                </button>
-                <button 
-                  onClick={() => { setActiveTab('status'); setSearchTerm(""); }} 
-                  className={`px-1 border-b-2 font-bold text-sm transition-all ${activeTab === 'status' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}
-                >
-                  대여 현황
-                </button>
+              <div className="flex gap-4 sm:gap-8 h-12">
+                <button onClick={() => {setActiveTab('list'); setSearchTerm("");}} className={`px-1 border-b-2 text-sm font-bold transition-all ${activeTab === 'list' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}>보드게임 목록</button>
+                <button onClick={() => {setActiveTab('status'); setSearchTerm("");}} className={`px-1 border-b-2 text-sm font-bold transition-all ${activeTab === 'status' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}>대여 현황</button>
               </div>
             </div>
           </nav>
 
-          <main className="max-w-5xl mx-auto p-4 space-y-6">
-            {/* 검색창 */}
-            <div className="bg-white p-3 rounded-2xl shadow-sm border relative">
-              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon name="search" className="w-5 h-5" />
+          <main className="max-w-5xl mx-auto p-4 space-y-4">
+            {statusMsg && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-bold flex items-center gap-2 animate-bounce">
+                <Icon name="alert-circle" className="w-4 h-4" /> {statusMsg}
               </div>
-              <input 
-                type="text" 
-                placeholder={activeTab === 'list' ? "보드게임 이름 또는 보관 위치 검색..." : "대여자, 게임명, 소속 검색..."}
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all" 
-                value={searchTerm} 
-                onChange={e => setSearchTerm(e.target.value)} 
-              />
+            )}
+
+            <div className="bg-white p-2 sm:p-3 rounded-2xl shadow-sm border relative">
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="search" className="w-5 h-5" /></div>
+              <input type="text" placeholder="검색어를 입력하세요..." className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
 
-            {/* 메인 테이블 */}
             <div className="bg-white rounded-2xl shadow-md border overflow-hidden">
-              <div className="overflow-x-auto">
-                {activeTab === 'list' ? (
-                  /* 보드게임 목록 */
-                  <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 border-b">
-                      <tr className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              {activeTab === 'list' ? (
+                <>
+                  <table className="desktop-table text-left">
+                    <thead className="bg-slate-50 border-b text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <tr>
                         <th className="px-6 py-4">보드게임 이름</th>
                         <th className="px-6 py-4">보관 위치</th>
                         <th className="px-6 py-4 text-center">잔여 / 총 수량</th>
                         <th className="px-6 py-4 text-center">신청</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
-                      {loading && games.length === 0 ? (
-                        <tr><td colSpan="4" className="px-6 py-24 text-center text-slate-400 font-medium">로딩 중...</td></tr>
-                      ) : filteredGames.map((game, idx) => {
-                        const available = parseInt(game.available || 0);
-                        const isStockOut = available <= 0;
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredGames.map((game, idx) => {
+                        const avail = parseInt(game.available || 0);
                         return (
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-6 py-5 font-bold text-lg text-slate-800">{game.name}</td>
                             <td className="px-6 py-5 text-slate-600 font-medium">{game.school}</td>
                             <td className="px-6 py-5 text-center text-xl font-black">
-                              <span className={isStockOut ? 'text-red-500' : 'text-blue-600'}>
-                                {Math.max(0, available)} / {game.total}
-                              </span>
+                              <span className={avail <= 0 ? 'text-red-500' : 'text-blue-600'}>{Math.max(0, avail)} / {game.total}</span>
                             </td>
                             <td className="px-6 py-5 text-center">
-                              <button 
-                                onClick={() => { setSelectedGame(game); setRentalQty(1); setIsModalOpen(true); }} 
-                                disabled={isStockOut} 
-                                className={`px-5 py-2.5 rounded-xl text-sm font-bold w-32 shadow-sm transition-all active:scale-95 ${isStockOut ? "bg-slate-100 text-slate-400" : "bg-blue-600 text-white hover:bg-blue-700"}`}
-                              >
-                                {isStockOut ? "재고없음" : "대여하기"}
-                              </button>
+                              <button onClick={() => { setSelectedGame(game); setRentalQty(1); setIsModalOpen(true); }} disabled={avail <= 0} className={`px-5 py-2.5 rounded-xl text-sm font-bold w-32 transition-all active:scale-95 ${avail <= 0 ? "bg-slate-100 text-slate-400" : "bg-blue-600 text-white hover:bg-blue-700"}`}>대여하기</button>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
-                ) : (
-                  /* 대여 현황 */
-                  <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 border-b">
-                      <tr className="text-xs font-bold text-slate-500 text-center uppercase tracking-wider">
-                        <th className="px-6 py-4 text-left">대여자 (소속)</th>
-                        <th className="px-6 py-4 text-left">대여 게임</th>
+                  
+                  <div className="mobile-cards divide-y divide-slate-100">
+                    {filteredGames.length === 0 ? <div className="p-10 text-center text-slate-400 font-medium">데이터가 없습니다.</div> :
+                      filteredGames.map((game, idx) => {
+                        const avail = parseInt(game.available || 0);
+                        return (
+                          <div key={idx} className="p-3 flex items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-slate-800 truncate-text text-base leading-tight">{game.name}</div>
+                              <div className="text-[10px] text-slate-400 truncate-text mt-0.5">{game.school}</div>
+                            </div>
+                            <div className="shrink-0 flex flex-col items-center justify-center px-2 border-x border-slate-100 min-w-[50px]">
+                              <span className="text-[9px] text-slate-400 font-bold leading-none mb-0.5">잔여</span>
+                              <span className={`text-base font-black leading-none ${avail <= 0 ? 'text-red-500' : 'text-blue-600'}`}>{Math.max(0, avail)}</span>
+                            </div>
+                            <div className="shrink-0">
+                              <button onClick={() => { setSelectedGame(game); setRentalQty(1); setIsModalOpen(true); }} disabled={avail <= 0} className={`px-3 py-2.5 rounded-xl font-bold text-xs shadow-sm active:scale-90 transition-all ${avail <= 0 ? "bg-slate-100 text-slate-300" : "bg-blue-600 text-white"}`}>{avail <= 0 ? "불가" : "대여"}</button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    }
+                  </div>
+                </>
+              ) : (
+                <>
+                  <table className="desktop-table text-left">
+                    <thead className="bg-slate-50 border-b text-xs font-bold text-slate-500 text-center uppercase tracking-wider">
+                      <tr>
+                        <th className="px-6 py-4 text-left">대여 게임 (위치)</th>
+                        <th className="px-6 py-4 text-left">대여자</th>
                         <th className="px-6 py-4">수량</th>
                         <th className="px-6 py-4">반납 예정일</th>
                         <th className="px-6 py-4">상태</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
-                      {loading && rentals.length === 0 ? (
-                        <tr><td colSpan="5" className="px-6 py-24 text-center text-slate-400 font-medium">데이터 로딩 중...</td></tr>
-                      ) : filteredRentals.length > 0 ? (
-                        filteredRentals.map((rental, idx) => {
-                          const statusText = String(rental.status || "");
-                          const isReturned = statusText.includes("반납") || statusText.includes("완료");
-                          const isOverdue = !isReturned && new Date(rental.dueDate) < new Date(today);
-                          return (
-                            <tr key={idx} className={`hover:bg-slate-50/50 transition-colors ${isReturned ? 'opacity-50' : ''}`}>
-                              <td className="px-6 py-5">
-                                <div className="font-bold text-slate-800">{rental.renter}</div>
-                                <div className="text-xs text-slate-400 font-medium">{rental.dept}</div>
-                              </td>
-                              <td className="px-6 py-5 font-bold text-slate-700">{rental.gameName}</td>
-                              <td className="px-6 py-5 text-center text-blue-600 font-black">{rental.qty}개</td>
-                              <td className="px-6 py-5 text-center font-bold text-slate-600">{String(rental.dueDate).split('T')[0]}</td>
-                              <td className="px-6 py-5 text-center">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black border-2 uppercase ${isReturned ? 'bg-slate-50 text-slate-400 border-slate-200' : (isOverdue ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-700 border-green-200')}`}>
-                                  {isReturned ? "반납됨" : (isOverdue ? "⚠️ 연체" : "대여중")}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr><td colSpan="5" className="px-6 py-20 text-center text-slate-400 font-medium">현재 대여 중인 내역이 없습니다.</td></tr>
-                      )}
+                    <tbody className="divide-y divide-slate-100 text-sm">
+                      {filteredRentals.map((rental, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/50">
+                          <td className="px-6 py-5 font-medium text-slate-700">{rental.gameName}<div className="text-xs text-blue-500 font-bold">{rental.school || ""}</div></td>
+                          <td className="px-6 py-5 font-bold text-slate-800">{rental.renter}<div className="text-xs text-slate-400 font-medium">{rental.dept}</div></td>
+                          <td className="px-6 py-5 text-center text-blue-600 font-black">{rental.qty}개</td>
+                          <td className="px-6 py-5 text-center font-bold text-slate-600">{String(rental.dueDate).split('T')[0]}</td>
+                          <td className="px-6 py-5 text-center">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black border-2 uppercase ${new Date(rental.dueDate) < new Date(today) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>{new Date(rental.dueDate) < new Date(today) ? "⚠️ 연체" : "대여중"}</span>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
-                )}
-              </div>
+
+                  <div className="mobile-cards divide-y divide-slate-100">
+                    {filteredRentals.length === 0 ? <div className="p-10 text-center text-slate-400 font-medium">대여 중인 내역이 없습니다.</div> :
+                      filteredRentals.map((rental, idx) => (
+                        <div key={idx} className="p-3 flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-slate-800 truncate-text text-sm leading-tight">{rental.gameName}</div>
+                            <div className="text-[11px] font-medium text-slate-600 truncate-text mt-0.5">{rental.renter} <span className="text-[10px] font-normal text-slate-400">({rental.dept})</span></div>
+                          </div>
+                          <div className="shrink-0 text-center px-2">
+                            <div className="text-[9px] text-slate-400 font-bold leading-none mb-0.5">수량</div>
+                            <div className="text-sm font-black text-blue-600 leading-none">{rental.qty}</div>
+                          </div>
+                          <div className="shrink-0 text-right min-w-[55px]">
+                            <div className="text-[9px] text-slate-400 font-bold leading-none mb-0.5">반납일</div>
+                            <div className={`text-[11px] font-bold leading-none ${new Date(rental.dueDate) < new Date(today) ? 'text-red-600' : 'text-slate-600'}`}>{displayDate(rental.dueDate)}</div>
+                          </div>
+                          <div className="shrink-0 pl-1">
+                             <div className={`w-2 h-2 rounded-full ${new Date(rental.dueDate) < new Date(today) ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </>
+              )}
             </div>
           </main>
 
-          {/* 대여 신청 모달 */}
-          {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="px-6 py-5 bg-blue-600 text-white flex justify-between items-center shadow-lg">
-                  <h2 className="text-xl font-bold flex items-center gap-2"><Icon name="package" className="w-5 h-5" /> 대여 신청</h2>
-                  <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-blue-700 rounded-lg transition-colors">
-                    <Icon name="x" className="w-6 h-6" />
-                  </button>
+          {/* 시작 안내 팝업 모달 */}
+          {isNoticeOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+              <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                <div className="px-6 py-5 bg-blue-600 text-white text-center font-bold">
+                   <Icon name="megaphone" className="w-10 h-10 mx-auto mb-2" />
+                   <h2 className="text-xl">알림</h2>
                 </div>
-                <div className="p-6 space-y-5">
-                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm space-y-3">
-                    <div>
-                      <p className="text-xs text-blue-500 font-bold mb-1 uppercase tracking-widest">신청 보드게임</p>
-                      <p className="text-lg font-black text-blue-900">{selectedGame?.name}</p>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-blue-200 mt-3 pt-3">
-                      <p className="text-sm font-bold text-blue-700">대여 수량 선택</p>
-                      <div className="flex items-center gap-4 bg-white px-3 py-1.5 rounded-xl border border-blue-200 shadow-sm">
-                        <button 
-                          type="button" 
-                          onClick={() => rentalQty > 1 && setRentalQty(rentalQty - 1)} 
-                          className="text-blue-600 p-1 hover:bg-blue-50 rounded transition-colors disabled:opacity-30"
-                          disabled={rentalQty <= 1}
-                        >
-                          <Icon name="minus" className="w-5 h-5 stroke-[3px]" />
-                        </button>
-                        <span className="text-lg font-black min-w-[20px] text-center">{rentalQty}</span>
-                        <button 
-                          type="button" 
-                          onClick={() => rentalQty < parseInt(selectedGame?.available || 0) && setRentalQty(rentalQty + 1)} 
-                          className="text-blue-600 p-1 hover:bg-blue-50 rounded transition-colors disabled:opacity-30"
-                          disabled={rentalQty >= parseInt(selectedGame?.available || 0)}
-                        >
-                          <Icon name="plus" className="w-5 h-5 stroke-[3px]" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-blue-400 text-right font-bold text-[10px]">최대 대여 가능: {selectedGame?.available}개</p>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1"><Icon name="user" className="w-4 h-4 text-blue-500" /> 대여자 이름</label>
-                    <input 
-                      type="text" 
-                      placeholder="성함을 입력하세요" 
-                      className="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all shadow-inner" 
-                      value={formData.name} 
-                      onChange={e => setFormData({...formData, name: e.target.value})} 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1"><Icon name="building-2" className="w-4 h-4 text-blue-500" /> 소속 (예. OO초)</label>
-                    <input 
-                      type="text" 
-                      placeholder="예: OO초 5-1 / 교무실" 
-                      className="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all shadow-inner" 
-                      value={formData.affiliation} 
-                      onChange={e => setFormData({...formData, affiliation: e.target.value})} 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold text-slate-700 flex items-center gap-1"><Icon name="calendar" className="w-4 h-4 text-blue-500" /> 반납 예정일</label>
-                    <input 
-                      type="date" 
-                      min={today} 
-                      className="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all shadow-inner" 
-                      value={formData.returnDate} 
-                      onChange={e => setFormData({...formData, returnDate: e.target.value})} 
-                    />
-                  </div>
-
-                  <button 
-                    onClick={handleBorrow} 
-                    disabled={isSubmitting || !formData.name || !formData.returnDate} 
-                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-95 disabled:bg-slate-300 transition-all flex items-center justify-center gap-2 mt-2"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        <span>전송 중...</span>
-                      </div>
-                    ) : "대여 신청 완료"}
+                <div className="p-8 text-center space-y-6">
+                  <p className="text-slate-700 font-bold leading-relaxed whitespace-pre-wrap">
+                    ※ 대여 후 반영까지 약 5초 정도 소요됩니다.{"\n"}정상적으로 처리되었는지 꼭 확인해주세요😊
+                  </p>
+                  <button onClick={() => setIsNoticeOpen(false)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all">
+                    확인
                   </button>
                 </div>
               </div>
             </div>
           )}
-          <footer className="max-w-5xl mx-auto px-4 py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-widest mt-12 border-t border-slate-100">
-            © 2026 니나노 BoardGame Rental System • Built for Education
+
+          {isModalOpen && (
+            <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+              <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in duration-300">
+                <div className="px-6 py-5 bg-blue-600 text-white flex justify-between items-center shadow-lg">
+                  <h2 className="text-xl font-bold flex items-center gap-2"><Icon name="package" className="w-5 h-5" /> 대여 신청</h2>
+                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-blue-700 rounded-lg transition-colors"><Icon name="x" className="w-6 h-6" /></button>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm">
+                    <p className="text-xs text-blue-500 font-bold mb-1 uppercase tracking-widest">선택한 보드게임</p>
+                    <p className="text-lg font-black text-blue-900">{selectedGame?.name}</p>
+                    <div className="flex items-center justify-between border-t border-blue-200 mt-3 pt-3">
+                      <p className="text-sm font-bold text-blue-700">대여 수량 선택</p>
+                      <div className="flex items-center gap-6 bg-white px-4 py-1.5 rounded-xl border border-blue-200 shadow-sm">
+                        <button type="button" onClick={() => rentalQty > 1 && setRentalQty(rentalQty - 1)} className="text-blue-600 disabled:opacity-20" disabled={rentalQty <= 1}><Icon name="minus" className="w-6 h-6 stroke-[3px]" /></button>
+                        <span className="text-xl font-black min-w-[24px] text-center">{rentalQty}</span>
+                        <button type="button" onClick={() => rentalQty < parseInt(selectedGame?.available || 0) && setRentalQty(rentalQty + 1)} className="text-blue-600 disabled:opacity-20" disabled={rentalQty >= parseInt(selectedGame?.available || 0)}><Icon name="plus" className="w-6 h-6 stroke-[3px]" /></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-sm font-bold text-slate-700 ml-1">성함</label>
+                      <input type="text" placeholder="성함을 입력하세요" className="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all shadow-inner" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-bold text-slate-700 ml-1">소속</label>
+                      <input type="text" placeholder="예:OO초" className="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none transition-all shadow-inner" value={formData.affiliation} onChange={e => setFormData({...formData, affiliation: e.target.value})} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-bold text-slate-700 ml-1">반납 예정일</label>
+                      <input type="date" min={today} className="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium" value={formData.returnDate} onChange={e => setFormData({...formData, returnDate: e.target.value})} />
+                    </div>
+                  </div>
+                  <button onClick={handleBorrow} disabled={isSubmitting || !formData.name} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-95 disabled:bg-slate-300 transition-all mt-2">
+                    {isSubmitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "대여 신청 완료"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          <footer className="max-w-5xl mx-auto px-4 py-12 text-center text-slate-400 text-xs font-bold mt-12 border-t border-slate-100">
+            <p className="tracking-widest uppercase mb-1">© 2026 어썸오쌤. All rights reserved.</p>
+            <p className="text-[10px] opacity-60">BoardGame Rental Management System</p>
           </footer>
         </div>
       );

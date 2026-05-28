@@ -1,0 +1,99 @@
+/**
+ * [2026. 니나노] 보드게임 대여 관리 - 백엔드 최종본 (드롭다운 & 색상 자동서식 포함)
+ */
+
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('index')
+    .setTitle('[2026. 니나노] 보드게임 대여 관리')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getData() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const mainSheet = ss.getSheetByName('메인 시트');
+    const rentalSheet = ss.getSheetByName('대여현황 시트');
+    const tz = ss.getSpreadsheetTimeZone();
+    
+    if (!mainSheet || !rentalSheet) {
+      return JSON.stringify({ error: "시트 이름을 확인하세요." });
+    }
+
+    const games = mainSheet.getDataRange().getValues().slice(1).map(row => ({
+      name: row[0], school: row[1], total: row[2], available: row[3]
+    }));
+    
+    const rentals = rentalSheet.getDataRange().getValues().slice(1).map(row => {
+      const formatTime = (val) => (val instanceof Date) ? Utilities.formatDate(val, tz, "yyyy-MM-dd") : val;
+      return {
+        gameName: row[0], qty: row[1], renter: row[2], dept: row[3],
+        startDate: formatTime(row[4]), dueDate: formatTime(row[5]),
+        status: row[6], school: row[7] || ""
+      };
+    });
+    
+    return JSON.stringify({ games, rentals });
+  } catch (e) {
+    return JSON.stringify({ error: e.toString() });
+  }
+}
+
+function postData(payload) {
+  try {
+    const params = JSON.parse(payload);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const rentalSheet = ss.getSheetByName('대여현황 시트');
+    
+    // 1. 새로운 행 추가
+    rentalSheet.appendRow([
+      params.gameName, 
+      params.rentalQty, 
+      params.name,        
+      params.affiliation, 
+      params.startDate, 
+      params.returnDate,  
+      "대여중", 
+      params.school
+    ]);
+
+    const lastRow = rentalSheet.getLastRow();
+    const statusCell = rentalSheet.getRange(lastRow, 7); // G열
+
+    // 2. 드롭다운(데이터 확인) 자동 생성
+    const rule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(['대여중', '반납완료'], true)
+      .setAllowInvalid(false)
+      .build();
+    statusCell.setDataValidation(rule);
+
+    // 3. 조건부 서식 적용 (G열 전체에 대해 규칙이 없다면 추가)
+    // 이미 시트 UI에서 설정하셨다면 이 코드는 보조 역할을 합니다.
+    const range = rentalSheet.getRange("G2:G1000");
+    const rules = rentalSheet.getConditionalFormatRules();
+    
+    // 규칙이 중복 생성되지 않도록 간단히 체크 후 추가 (필요 시 시트에서 직접 설정하는 것이 가장 깔끔함)
+    if (rules.length < 2) {
+      const rule1 = SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo("대여중")
+        .setBackground("#FEE2E2") // 연빨강 배경
+        .setFontColor("#EF4444")   // 빨강 글씨
+        .setRanges([range])
+        .build();
+        
+      const rule2 = SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo("반납완료")
+        .setBackground("#DBEAFE") // 연파랑 배경
+        .setFontColor("#3B82F6")   // 파랑 글씨
+        .setRanges([range])
+        .build();
+        
+      rules.push(rule1, rule2);
+      rentalSheet.setConditionalFormatRules(rules);
+    }
+    
+    return JSON.stringify({ result: 'success' });
+  } catch (e) {
+    return JSON.stringify({ result: 'error', message: e.toString() });
+  }
+}
