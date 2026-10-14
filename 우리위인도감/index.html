@@ -12,18 +12,18 @@
 :root{
   --paper:#F6F4EC; --card:#FFFFFF; --ink:#23262B; --muted:#5E6470; --line:#E2DED0;
   --hong:#C8382E; --cheong:#1E5C8A; --hwang:#D9A02B; --nok:#2E7D5B; --heuk:#3B3F47;
-  --soft:#FBF3E2; --seal:#C8382E; --shadow:0 2px 0 rgba(35,38,43,.08),0 8px 22px rgba(35,38,43,.08);
+  --soft:#FBF3E2; --seal:#C8382E; --bora:#7A4FA0; --shadow:0 2px 0 rgba(35,38,43,.08),0 8px 22px rgba(35,38,43,.08);
   --display:"Jua","Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --paper:#1B1D21; --card:#25282E; --ink:#F1EEE6; --muted:#B4B7BE; --line:#383C44;
   --hong:#F06A5E; --cheong:#6FAEE0; --hwang:#F0C25A; --nok:#5FC495; --heuk:#9AA0AA;
-  --soft:#2D2A22; --seal:#E85A4F; --shadow:0 2px 0 rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.35); color-scheme:dark}}
+  --soft:#2D2A22; --seal:#E85A4F; --bora:#B48FD8; --shadow:0 2px 0 rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#1B1D21; --card:#25282E; --ink:#F1EEE6; --muted:#B4B7BE; --line:#383C44;
   --hong:#F06A5E; --cheong:#6FAEE0; --hwang:#F0C25A; --nok:#5FC495; --heuk:#9AA0AA;
-  --soft:#2D2A22; --seal:#E85A4F; --shadow:0 2px 0 rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.35); color-scheme:dark}
+  --soft:#2D2A22; --seal:#E85A4F; --bora:#B48FD8; --shadow:0 2px 0 rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.35); color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -58,7 +58,7 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(30px,5vw,44px);lin
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;margin-top:18px}
 .card{position:relative;background:var(--card);border:none;border-radius:16px;padding:10px 10px 12px;text-align:center;box-shadow:var(--shadow);transition:transform .15s ease}
 .card:hover{transform:translateY(-4px) rotate(-.6deg)}
-.card .ph{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:var(--soft)}
+.card .ph{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;object-position:50% 20%;border-radius:10px;background:var(--soft)}
 .card .nm{display:block;font-family:var(--display);font-size:24px;margin-top:8px;line-height:1.2}
 .card .tag{display:inline-block;margin-top:4px;font-size:14px;color:var(--muted)}
 .card .band{position:absolute;left:10px;right:10px;top:10px;height:6px;border-radius:10px 10px 0 0}
@@ -72,7 +72,7 @@ dialog{border:none;padding:0;border-radius:22px;background:var(--card);color:var
 dialog::backdrop{background:rgba(20,22,26,.55)}
 .dlg{display:grid;grid-template-columns:240px 1fr;gap:24px;padding:24px}
 .dlg-photo{display:flex;flex-direction:column;gap:12px;align-items:center}
-.dlg-photo img{width:100%;max-width:240px;aspect-ratio:3/4;object-fit:cover;border-radius:14px;background:var(--soft)}
+.dlg-photo img{width:100%;max-width:240px;aspect-ratio:3/4;object-fit:cover;object-position:50% 20%;border-radius:14px;background:var(--soft)}
 .dlg-body{min-width:0}
 .chip{display:inline-block;color:#fff;border-radius:999px;padding:2px 12px;font-size:15px;font-family:var(--display)}
 .dlg h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,46px);margin:6px 0 0;line-height:1.1}
@@ -123,6 +123,40 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 .cf-box p{font-family:var(--display);font-size:24px;line-height:1.35;margin:10px 0 4px;text-wrap:balance}
 .cf-box small{display:block;color:var(--hong);font-size:16px;min-height:22px}
 .cf-box .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.cap{font-size:13px;color:var(--muted);text-align:center;line-height:1.4;max-width:240px}
+.cap a{color:inherit}
+.fav{border:2px solid var(--hong);color:var(--hong);background:transparent;border-radius:999px;padding:6px 16px;font-family:var(--display);font-size:18px}
+.fav[aria-pressed="true"]{background:var(--hong);color:#fff}
+.card .heart{position:absolute;left:16px;top:16px;width:34px;height:34px;border-radius:50%;background:var(--hong);color:#fff;display:grid;place-items:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.learn{margin-top:40px;background:var(--card);border-radius:22px;padding:24px 20px;box-shadow:var(--shadow)}
+.learn h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,36px);margin:0}
+.learn h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0;color:var(--bora)}
+.learn .lead{color:var(--muted);margin:4px 0 16px}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.slot{border:2px dashed var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:start;min-width:0}
+.slot.empty{display:flex;align-items:center;justify-content:center;min-height:150px;color:var(--muted);text-align:center}
+.slot img{width:96px;aspect-ratio:3/4;object-fit:cover;object-position:50% 20%;border-radius:10px;background:var(--soft)}
+.slot .no{font-family:var(--display);color:var(--hong);font-size:18px}
+.slot b{font-family:var(--display);font-weight:400;font-size:26px;display:block;line-height:1.2}
+.slot .nk{color:var(--muted);font-size:15px;margin-bottom:6px}
+.slot label{display:block;font-family:var(--display);font-size:16px;color:var(--nok);margin-top:6px}
+.slot textarea,.song input{width:100%;font:inherit;font-size:17px;border:2px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--paper);color:var(--ink)}
+.slot textarea{min-height:56px;resize:vertical}
+.slot .tr{font-size:15px;margin-top:6px}
+.song{margin-top:20px;border-top:2px dashed var(--line);padding-top:18px}
+.song ol{margin:10px 0 14px;padding-left:24px;display:grid;gap:6px}
+.song li{font-family:var(--display);font-size:clamp(19px,2.6vw,23px);background:var(--soft);border-radius:10px;padding:6px 12px}
+.song label{display:block;font-family:var(--display);font-size:17px;margin-top:10px}
+.learn-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.wsname{display:none}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap > :not(.learn){display:none!important}
+  .learn{box-shadow:none;padding:0}
+  .learn-tools{display:none}
+  .wsname{display:block;font-size:18px;margin:6px 0 14px}
+  .slot textarea,.song input{border:1px solid #999;min-height:70px}
+}
 .foot{margin-top:28px;color:var(--muted);font-size:14px;text-align:center}
 
 @media (max-width:640px){
@@ -158,14 +192,30 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 
   <nav class="eras" id="eras" aria-label="시대 고르기"></nav>
   <main class="grid" id="grid"></main>
-  <p class="foot">노래 ‘한국을 빛낸 100명의 위인들’에 나오는 인물 가운데 대표 위인을 골랐어요. ‘상상 그림’은 진짜 얼굴이 남아 있지 않거나 사진을 넣지 못해 새로 그린 캐릭터예요.<br>설명은 초등학교 2학년이 읽기 쉽도록 짧게 풀어 썼어요. ‘○○라고 전해져요’는 옛이야기로 내려오는 내용이에요.</p>
+
+  <section class="learn" id="learn" aria-labelledby="learnTitle">
+    <h2 id="learnTitle">나도 배울래요</h2>
+    <p class="wsname">2학년 (　　)반　이름: (　　　　　　　)</p>
+    <p class="lead">위인 카드를 열고 ‘♡ 닮고 싶어요’를 눌러 닮고 싶은 위인 두 명을 골라 보세요.</p>
+    <div class="slots" id="slots"></div>
+    <div class="song">
+      <h3>노랫말 바꾸기</h3>
+      <p class="lead">‘한국을 빛낸 100명의 위인들’ 노래의 두 줄을 내가 고른 위인으로 바꿔 불러 봐요. ‘○○한 ○○○처럼 될 테야’ 모양으로 써요.</p>
+      <div style="font-family:var(--display);font-size:17px;color:var(--muted)">이렇게 바꿔 볼 수 있어요</div>
+      <ol id="songEx"></ol>
+      <label for="ly1">나의 노랫말 1</label><input id="ly1" type="text" autocomplete="off">
+      <label for="ly2">나의 노랫말 2</label><input id="ly2" type="text" autocomplete="off">
+    </div>
+    <div class="learn-tools"><button class="btn ghost" id="favClear" type="button">고른 위인 지우기</button><button class="btn" id="printBtn" type="button" hidden>학습지 인쇄</button></div>
+  </section>
+  <p class="foot">노래 ‘한국을 빛낸 100명의 위인들’에 나오는 대표 위인과, 오늘날 세계에 우리나라를 빛낸 인물을 담았어요. ‘상상 그림’은 진짜 얼굴이 남아 있지 않거나 사진을 넣지 못해 새로 그린 캐릭터예요.<br>설명은 초등학교 2학년이 읽기 쉽도록 짧게 풀어 썼어요. ‘○○라고 전해져요’는 옛이야기로 내려오는 내용이에요.</p>
 </div>
 
 <dialog id="dlg" aria-labelledby="dName">
   <button class="x" type="button" data-close aria-label="닫기">×</button>
   <div id="view">
   <div class="dlg">
-    <div class="dlg-photo"><img id="dImg" alt=""><button class="btn" id="speak" type="button">🔊 읽어 주기</button></div>
+    <div class="dlg-photo"><img id="dImg" alt=""><small class="cap" id="dCap"></small><button class="btn" id="speak" type="button">🔊 읽어 주기</button><button class="fav" id="favBtn" type="button" aria-pressed="false">♡ 닮고 싶어요</button></div>
     <div class="dlg-body">
       <span class="chip" id="dEra"></span>
       <h2 id="dName"></h2>
@@ -216,6 +266,14 @@ const IMG = {"image1": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDA
 
 /* 사진이 없는 위인: 시대 옷차림으로 새로 그린 상상 캐릭터 */
 function avatar(o){
+  if(o.sym){
+    const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320"><rect width="240" height="320" fill="${o.bg}"/>
+      <circle cx="120" cy="150" r="88" fill="#FFFFFF" opacity=".55"/><circle cx="196" cy="48" r="44" fill="#FFFFFF" opacity=".3"/>
+      <text x="120" y="182" font-size="96" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${o.sym}</text>
+      <text x="120" y="272" font-family="Jua, sans-serif" font-size="26" fill="#3B3F47" text-anchor="middle">${o.cap}</text>
+      <rect x="148" y="290" width="82" height="22" rx="11" fill="#FFFFFF" opacity=".85"/><text x="189" y="306" font-family="Jua, sans-serif" font-size="13" fill="#5E6470" text-anchor="middle">사진 대신 그림</text></svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
+  }
   const D='#2A2420', skin='#F3CFAB', robe=o.robe||'#1E5C8A', bg=o.bg||'#EAF0F4';
   let back='', hat='', body='', extra='';
   body = `<path d="M34 320 Q36 232 120 224 Q204 232 206 320Z" fill="${robe}"/>`;
@@ -270,9 +328,10 @@ const ERAS = [
   {k:'goryeo', t:'고려', c:'var(--hwang)'},
   {k:'joseon', t:'조선', c:'var(--cheong)'},
   {k:'modern', t:'근현대', c:'var(--hong)'},
+  {k:'now', t:'오늘날', c:'var(--bora)'},
 ];
-const ERA_NAME = {old:'고조선~남북국', goryeo:'고려', joseon:'조선', modern:'근현대'};
-const ERA_COLOR = {old:'var(--nok)', goryeo:'var(--hwang)', joseon:'var(--cheong)', modern:'var(--hong)'};
+const ERA_NAME = {old:'고조선~남북국', goryeo:'고려', joseon:'조선', modern:'근현대', now:'오늘날'};
+const ERA_COLOR = {old:'var(--nok)', goryeo:'var(--hwang)', joseon:'var(--cheong)', modern:'var(--hong)', now:'var(--bora)'};
 
 const P = [
 {id:'dangun', name:'단군왕검', era:'old', img:'image1', nick:'우리 역사의 첫 나라를 세운 분',
@@ -488,15 +547,57 @@ const MORE = [
  say:['남긴 말','농담으로라도 거짓말을 하지 마라.','작은 거짓말도 하지 않는 정직한 사람이 되자는 뜻이에요.'],
  try:'실수했을 때 숨기지 않고 솔직하게 말해 봐요.',
  clue:'“농담으로라도 거짓말을 하지 마라”며 정직을 가르친 독립운동가는?'},
+{id:'songijeong', name:'손기정', era:'modern', av:{sym:'🏃',cap:'1936 베를린',bg:'#F7E9E6'}, nick:'올림픽 마라톤 금메달리스트',
+ did:[['🥇','1936년 독일 베를린 올림픽 마라톤에서 1등을 했어요. 42.195km를 쉬지 않고 달리는 경기예요.'],['🌳','나라를 빼앗긴 때라 일본 국기를 달고 뛰어야 했어요. 시상대에서 받은 월계수 나무로 가슴의 일본 국기를 가렸어요.'],['🔥','1988년 서울 올림픽 때 성화를 들고 경기장에 들어와 큰 박수를 받았어요.']],
+ say:['마음가짐','마음속에는 늘 우리나라','다른 나라 국기를 달았어도 마음은 우리나라 선수였어요.'],
+ try:'운동장을 한 바퀴 끝까지 달려 보고, 달린 뒤의 기분을 말해 봐요.',
+ clue:'1936년 베를린 올림픽 마라톤에서 1등을 한 선수는?'},
+{id:'parkseri', name:'박세리', era:'now', av:{sym:'⛳',cap:'골프',bg:'#E7F1EA'}, nick:'맨발로 희망을 준 골프 선수',
+ did:[['🏆','미국의 큰 골프 대회에서 여러 번 우승한 우리나라 골프 선수예요.'],['🦶','1998년 공이 연못가에 빠지자 신발과 양말을 벗고 물에 들어가 공을 쳐 냈어요. 그리고 끝내 우승했어요.'],['🌱','나라 살림이 어려웠던 때라 그 모습이 많은 사람에게 힘을 주었어요. 박세리를 보고 골프를 시작한 후배들을 ‘세리 키즈’라고 불러요.']],
+ say:['마음가짐','어려울수록 포기하지 않아요','공이 물가에 빠져도 끝까지 도전했어요.'],
+ try:'잘 안되는 일이 있으면 방법을 바꿔서 한 번 더 해 봐요.',
+ clue:'연못가에서 맨발로 공을 쳐 내고 우승한 골프 선수는?'},
+{id:'parkjisung', name:'박지성', era:'now', av:{sym:'⚽',cap:'축구',bg:'#E9EEF5'}, nick:'지치지 않는 ‘두 개의 심장’',
+ did:[['🇰🇷','2002년 우리나라에서 열린 월드컵에서 멋진 골을 넣어 우리나라가 4강에 오르는 데 힘을 보탰어요.'],['🏟️','영국의 유명한 축구팀 ‘맨체스터 유나이티드’에서 뛰며 여러 번 우승했어요.'],['❤️','발바닥이 평평한 평발이었지만, 쉬지 않고 열심히 뛰어서 ‘두 개의 심장’이라는 별명을 얻었어요.']],
+ say:['별명','두 개의 심장','심장이 두 개인 것처럼 지치지 않고 뛴다는 뜻이에요.'],
+ try:'체육 시간에 친구에게 공을 양보하며 함께 뛰어 봐요.',
+ clue:'‘두 개의 심장’이라는 별명을 가진 축구 선수는?'},
+{id:'bongjoonho', name:'봉준호', era:'now', av:{sym:'🎬',cap:'영화',bg:'#F3ECE6'}, nick:'세계를 놀라게 한 영화감독',
+ did:[['🎞️','영화를 만드는 감독이에요. 영화 ‘기생충’은 어른들이 보는 영화예요.'],['🏆','2020년 미국 아카데미 시상식에서 ‘기생충’으로 가장 큰 상인 작품상을 받았어요.'],['🌏','영어가 아닌 다른 나라 말로 만든 영화가 작품상을 받은 것은 처음이었어요.']],
+ say:['상을 받으며 한 말','가장 개인적인 것이 가장 창의적인 것이다.','존경하는 감독의 말을 소개한 거예요. 나만의 생각과 이야기가 가장 새롭다는 뜻이에요.'],
+ try:'나만 아는 재미있는 이야기를 네 칸 만화로 그려 봐요.',
+ clue:'영화 ‘기생충’으로 아카데미 작품상을 받은 감독은?'},
+{id:'kimyuna', name:'김연아', era:'now', av:{sym:'⛸️',cap:'피겨스케이팅',bg:'#E6F0F7'}, nick:'얼음 위의 여왕',
+ did:[['🥇','2010년 밴쿠버 올림픽 피겨스케이팅에서 금메달을 땄어요. 그때 세계 최고 점수를 세웠어요.'],['🥈','2014년 소치 올림픽에서도 은메달을 땄어요.'],['🔥','2018년 평창 올림픽 때 마지막으로 성화에 불을 붙였어요.']],
+ say:['마음가짐','넘어져도 다시 일어나요','멋진 점프를 위해 수없이 넘어지며 연습했어요.'],
+ try:'넘어지거나 틀려도 “괜찮아, 다시!” 하고 외쳐 봐요.',
+ clue:'2010년 밴쿠버 올림픽에서 금메달을 딴 피겨스케이팅 선수는?'},
+{id:'hankang', name:'한강', era:'now', av:{sym:'📖',cap:'노벨 문학상',bg:'#F7F0DF'}, nick:'우리나라 첫 노벨 문학상 작가',
+ did:[['🏅','2024년 우리나라 사람으로는 처음으로 노벨 문학상을 받았어요. 노벨상은 세계에서 가장 유명한 상 가운데 하나예요.'],['✍️','사람의 마음과 아픔을 깊이 들여다보는 소설과 시를 썼어요.'],['🧸','어린이를 위한 동화 ‘눈물상자’도 썼어요.']],
+ say:['마음가짐','글로 마음을 전해요','다른 사람의 마음을 깊이 생각하며 글을 써요.'],
+ try:'오늘 내 마음을 세 문장으로 일기에 써 봐요.',
+ clue:'우리나라 사람 최초로 노벨 문학상을 받은 작가는?'},
 ];
 const ORDER = ['dangun','jumong','onjo','hyeok','gwanggaeto','leesabu','gyebaek','kimyusin','wonhyo','daejoyeong','jangbogo',
   'seohui','gangamchan','choimuseon','munikjeom','choiyoung',
   'sejong','hwanghui','jangyeongsil','saimdang','leehwang','leei','leesunsin','gwakjaewoo','kimsimin','gwonyul','hanseokbong','kimhongdo','jeongjo','jeongyakyong','kimjeongho','jeonbongjun',
-  'jiseokyeong','sonbyeonghui','jusigyeong','kimgu','anchangho','anjunggeun','bangjeonghwan','yugwansun','leejungseop','yundongju'];
+  'jiseokyeong','sonbyeonghui','jusigyeong','kimgu','anchangho','anjunggeun','bangjeonghwan','yugwansun','leejungseop','yundongju','songijeong',
+  'parkseri','parkjisung','bongjoonho','kimyuna','hankang'];
 P.push(...MORE);
 P.sort((a,b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 const AV = {};
-const src = p => p.av ? (AV[p.id] ||= avatar(p.av)) : IMG[p.img];
+const local = p => p.av ? (AV[p.id] ||= avatar(p.av)) : IMG[p.img];
+/* 위키백과(위키미디어 공용) 대표 이미지: 불러오지 못하면 내장 그림으로 바뀌어요 */
+const WIKI = {"dangun": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Portrait_of_Dangun.jpg/500px-Portrait_of_Dangun.jpg", "f": "Portrait_of_Dangun.jpg", "k": "옛 초상화", "l": "Public domain", "a": "채용신"}, "onjo": {"u": "https://upload.wikimedia.org/wikipedia/commons/6/69/%EC%B4%88%EB%93%B1%EB%8C%80%ED%95%9C%EC%97%AD%EC%82%AC_%EC%A0%9C2%ED%8E%B8_12.jpg", "f": "초등대한역사_제2편_12.jpg", "k": "옛 책 삽화", "l": "Public domain", "a": "정인호"}, "gwanggaeto": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/20250524_%EA%B5%AC%EB%A6%AC_%EA%B4%91%EA%B0%9C%ED%86%A0%EB%8C%80%EC%99%95%EB%B9%84.jpg/500px-20250524_%EA%B5%AC%EB%A6%AC_%EA%B4%91%EA%B0%9C%ED%86%A0%EB%8C%80%EC%99%95%EB%B9%84.jpg", "f": "20250524_구리_광개토대왕비.jpg", "k": "동상", "l": "CC BY-SA 4.0", "a": "쿠키몬스터"}, "gyebaek": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/%EA%B3%84%EB%B0%B1_%EC%9E%A5%EA%B5%B0_%EC%98%81%EC%A0%95.jpg/500px-%EA%B3%84%EB%B0%B1_%EC%9E%A5%EA%B5%B0_%EC%98%81%EC%A0%95.jpg", "f": "계백_장군_영정.jpg", "k": "영정(그림)", "l": "KOGL Type 1", "a": ""}, "kimyusin": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Portrait_of_Kim_Yushin_in_the_famous_portrait_photo_book_of_Joseon.jpg/500px-Portrait_of_Kim_Yushin_in_the_famous_portrait_photo_book_of_Joseon.jpg", "f": "Portrait_of_Kim_Yushin_in_the_famous_portrait_photo_book_of_Joseon.jpg", "k": "옛 초상화", "l": "Public domain", "a": ""}, "wonhyo": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/%EC%9B%90%ED%9A%A8%EB%8C%80%EC%82%AC_%EC%98%81%EC%A0%95.JPG/500px-%EC%9B%90%ED%9A%A8%EB%8C%80%EC%82%AC_%EC%98%81%EC%A0%95.JPG", "f": "원효대사_영정.JPG", "k": "옛 초상화", "l": "Public domain", "a": ""}, "gangamchan": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/%EA%B0%95%EA%B0%90%EC%B0%AC_%EC%9E%A5%EA%B5%B0_%ED%9D%89%EC%83%81.jpg/500px-%EA%B0%95%EA%B0%90%EC%B0%AC_%EC%9E%A5%EA%B5%B0_%ED%9D%89%EC%83%81.jpg", "f": "강감찬_장군_흉상.jpg", "k": "흉상", "l": "CC BY 4.0", "a": "공공누리"}, "choiyoung": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/%EC%B5%9C%EC%98%81_%EC%B4%88%EC%83%81.jpg/500px-%EC%B5%9C%EC%98%81_%EC%B4%88%EC%83%81.jpg", "f": "최영_초상.jpg", "k": "옛 초상화", "l": "KOGL Type 1", "a": "국가유산청"}, "hwanghui": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Hwang_Hui.jpg/500px-Hwang_Hui.jpg", "f": "Hwang_Hui.jpg", "k": "옛 초상화", "l": "Public domain", "a": ""}, "jangyeongsil": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Jang_Youngsil_3.jpg/500px-Jang_Youngsil_3.jpg", "f": "Jang_Youngsil_3.jpg", "k": "동상", "l": "CC BY-SA 3.0", "a": "Himasaram"}, "saimdang": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/ShinSaimdangOldPortrait.webp/500px-ShinSaimdangOldPortrait.webp", "f": "ShinSaimdangOldPortrait.webp", "k": "옛 초상화", "l": "Public domain", "a": ""}, "leehwang": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Statue_of_Yi_Hwang.jpg/500px-Statue_of_Yi_Hwang.jpg", "f": "Statue_of_Yi_Hwang.jpg", "k": "동상", "l": "CC BY-SA 2.0 kr", "a": "Integral"}, "leesunsin": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/%EC%A0%84_%EC%9D%B4%EC%88%9C%EC%8B%A0_%EC%B4%88%EC%83%81_%28cropped%29.jpg/500px-%EC%A0%84_%EC%9D%B4%EC%88%9C%EC%8B%A0_%EC%B4%88%EC%83%81_%28cropped%29.jpg", "f": "전_이순신_초상_(cropped).jpg", "k": "옛 초상화", "l": "Public domain", "a": ""}, "gwakjaewoo": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/%EA%B3%BD%EC%9E%AC%EC%9A%B0_%ED%9D%89%EC%83%81.jpg/500px-%EA%B3%BD%EC%9E%AC%EC%9A%B0_%ED%9D%89%EC%83%81.jpg", "f": "곽재우_흉상.jpg", "k": "흉상", "l": "CC BY 4.0", "a": ""}, "kimsimin": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Kim_Si-min.jpg/500px-Kim_Si-min.jpg", "f": "Kim_Si-min.jpg", "k": "동상", "l": "CC BY 3.0", "a": "Kang Byeong Kee"}, "gwonyul": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/%EA%B6%8C%EC%9C%A8_%EC%98%81%EC%A0%95%2C_%ED%95%9C%EA%B5%AD%ED%95%99%EC%A4%91%EC%95%99%EC%97%B0%EA%B5%AC%EC%9B%90.jpg/500px-%EA%B6%8C%EC%9C%A8_%EC%98%81%EC%A0%95%2C_%ED%95%9C%EA%B5%AD%ED%95%99%EC%A4%91%EC%95%99%EC%97%B0%EA%B5%AC%EC%9B%90.jpg", "f": "권율_영정,_한국학중앙연구원.jpg", "k": "영정(그림)", "l": "KOGL Type 1", "a": "장우성"}, "jeongyakyong": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Jeong_Yak-yong.jpg/500px-Jeong_Yak-yong.jpg", "f": "Jeong_Yak-yong.jpg", "k": "옛 초상화", "l": "Public domain", "a": ""}, "jeonbongjun": {"u": "https://upload.wikimedia.org/wikipedia/commons/3/3f/JeonBongJun.jpg", "f": "JeonBongJun.jpg", "k": "사진", "l": "Public domain", "a": ""}, "jiseokyeong": {"u": "https://upload.wikimedia.org/wikipedia/commons/7/72/%EC%A7%80%EC%84%9D%EC%98%81.jpeg", "f": "지석영.jpeg", "k": "사진", "l": "Public domain", "a": ""}, "sonbyeonghui": {"u": "https://upload.wikimedia.org/wikipedia/commons/c/c4/SonByeongHui.jpg", "f": "SonByeongHui.jpg", "k": "사진", "l": "Public domain", "a": ""}, "jusigyeong": {"u": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Ju_Si-gyeong_1876-1914_portrait_from_%E5%91%A8%E6%99%82%E7%B6%93%E5%85%88%E7%94%9F%E9%81%BA%E7%A8%BF.png", "f": "Ju_Si-gyeong_1876-1914_portrait_from_周時經先生遺稿.png", "k": "사진", "l": "Public domain", "a": ""}, "kimgu": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Kim_Gu_in_1949.jpg/500px-Kim_Gu_in_1949.jpg", "f": "Kim_Gu_in_1949.jpg", "k": "사진", "l": "Public domain", "a": ""}, "anchangho": {"u": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Ahn_Changho.jpg", "f": "Ahn_Changho.jpg", "k": "사진", "l": "Public domain", "a": ""}, "anjunggeun": {"u": "https://upload.wikimedia.org/wikipedia/commons/4/4e/An_Jung-geun.JPG", "f": "An_Jung-geun.JPG", "k": "사진", "l": "Public domain", "a": ""}, "bangjeonghwan": {"u": "https://upload.wikimedia.org/wikipedia/commons/8/83/%EB%B0%A9%EC%A0%95%ED%99%98.JPG", "f": "방정환.JPG", "k": "사진", "l": "Public domain", "a": ""}, "yugwansun": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Ryu_Gwan-sun.jpg/500px-Ryu_Gwan-sun.jpg", "f": "Ryu_Gwan-sun.jpg", "k": "사진", "l": "Public domain", "a": ""}, "leejungseop": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/%EC%9D%B4%EC%A4%91%EC%84%AD_%ED%99%94%EB%B0%B1.jpg/500px-%EC%9D%B4%EC%A4%91%EC%84%AD_%ED%99%94%EB%B0%B1.jpg", "f": "이중섭_화백.jpg", "k": "사진", "l": "Public domain", "a": "동아일보"}, "yundongju": {"u": "https://upload.wikimedia.org/wikipedia/commons/6/63/Yoon_Dong-ju.jpg", "f": "Yoon_Dong-ju.jpg", "k": "사진", "l": "Public domain", "a": ""}, "songijeong": {"u": "https://upload.wikimedia.org/wikipedia/commons/5/5c/KC_Sohn.jpg", "f": "KC_Sohn.jpg", "k": "사진", "l": "Public domain", "a": ""}, "parkseri": {"u": "https://upload.wikimedia.org/wikipedia/commons/2/24/Se-ri_Pak2.jpg", "f": "Se-ri_Pak2.jpg", "k": "사진", "l": "CC BY-SA 3.0", "a": "Cath Mudford"}, "parkjisung": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Ji-Sung_Park_vs_Fulham_%28cropped%29.jpg/500px-Ji-Sung_Park_vs_Fulham_%28cropped%29.jpg", "f": "Ji-Sung_Park_vs_Fulham_(cropped).jpg", "k": "사진", "l": "CC BY 2.0", "a": "Magnus D"}, "bongjoonho": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Bong_Joon-ho_2017.jpg/500px-Bong_Joon-ho_2017.jpg", "f": "Bong_Joon-ho_2017.jpg", "k": "사진", "l": "CC BY 2.0", "a": "Dick Thomas Johnson"}, "kimyuna": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/YuNaKimInVancouver.jpg/500px-YuNaKimInVancouver.jpg", "f": "YuNaKimInVancouver.jpg", "k": "사진", "l": "CC BY 3.0", "a": "Sfcphoto.KeunHwa"}, "hankang": {"u": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Han_Kang%2C_2024_Nobel_Prize_Laureate_in_Literature_%28cropped%29.jpg/500px-Han_Kang%2C_2024_Nobel_Prize_Laureate_in_Literature_%28cropped%29.jpg", "f": "Han_Kang,_2024_Nobel_Prize_Laureate_in_Literature_(cropped).jpg", "k": "사진", "l": "CC BY-SA 4.0", "a": "John Sears"}};
+const src = p => WIKI[p.id] ? WIKI[p.id].u : local(p);
+const fbAttr = p => WIKI[p.id] ? ` data-fb="${p.id}"` : '';
+document.addEventListener('error', e => {
+  const el = e.target; if(el.tagName !== 'IMG' || !el.dataset.fb) return;
+  const p = P.find(x => x.id === el.dataset.fb); delete el.dataset.fb; if(p) el.src = local(p);
+}, true);
+function setImg(el, p){ if(WIKI[p.id]) el.dataset.fb = p.id; else delete el.dataset.fb; el.src = src(p); el.alt = p.name; }
+const LYRIC = {"dangun": "널리 사람을 돕는", "jumong": "활을 잘 쏘는 씩씩한", "onjo": "새 나라를 연 용기 있는", "hyeok": "세상을 밝게 다스린", "gwanggaeto": "넓은 땅을 달려간 씩씩한", "leesabu": "꾀를 내어 문제를 푼", "gyebaek": "끝까지 포기하지 않는", "kimyusin": "날마다 몸과 마음을 닦은", "wonhyo": "마음먹기의 힘을 깨달은", "daejoyeong": "흩어진 사람들을 이끈", "jangbogo": "바다를 누비며 사람을 지킨", "seohui": "차분한 말로 나라 지킨", "gangamchan": "나이 들어도 앞장선", "choimuseon": "될 때까지 연구한", "munikjeom": "모두를 따뜻하게 해 준", "choiyoung": "욕심 없이 바르게 산", "sejong": "모두를 위해 한글 만든", "hwanghui": "남을 배려하는 마음 따뜻한", "jangyeongsil": "재주로 꿈을 펼친", "saimdang": "작은 것도 자세히 본", "leehwang": "배움을 나누는", "leei": "미리미리 준비하는", "leesunsin": "용감하게 바다 지킨", "gwakjaewoo": "스스로 나서 고장 지킨", "kimsimin": "힘을 모아 진주성 지킨", "gwonyul": "모두와 힘을 합친", "hanseokbong": "연습을 멈추지 않은", "kimhongdo": "우리 모습을 즐겁게 그린", "jeongjo": "백성 말에 귀 기울인", "jeongyakyong": "백성을 생각한 똑똑한", "kimjeongho": "꼼꼼하게 길을 담은", "jeonbongjun": "작지만 단단하고 용감한", "jiseokyeong": "아픈 사람을 지켜 준", "sonbyeonghui": "모든 사람을 귀하게 여긴", "jusigyeong": "우리말을 아낀", "kimgu": "아름다운 나라를 꿈꾼", "anchangho": "거짓 없이 정직한", "anjunggeun": "날마다 책을 가까이한", "bangjeonghwan": "어린이를 소중히 여긴", "yugwansun": "용기 내어 목소리 낸", "leejungseop": "어디서든 그림 그린", "yundongju": "부끄럼 없이 바르게 산", "songijeong": "끝까지 힘차게 달린", "parkseri": "맨발로도 도전한", "parkjisung": "지치지 않고 뛰는", "bongjoonho": "나만의 이야기를 만든", "kimyuna": "넘어져도 다시 일어난", "hankang": "마음을 글로 전한"};
+const shortName = n => n.replace(/\(.*\)/,'');
 
 /* 도장 저장 */
 let done = new Set();
@@ -517,7 +618,7 @@ function renderGrid(){
   grid.innerHTML = visible().map(p => `
     <button class="card ${done.has(p.id)?'done':''}" type="button" data-id="${p.id}" aria-label="${p.name} 알아보기">
       <span class="band" style="background:${ERA_COLOR[p.era]}"></span>
-      <img class="ph" src="${src(p)}" alt="${p.name}">
+      <img class="ph" src="${src(p)}"${fbAttr(p)} alt="${p.name}" loading="lazy">${fav.includes(p.id)?'<span class="heart" aria-label="닮고 싶은 위인">♥</span>':''}
       <span class="nm">${p.name}</span>
       <span class="tag">${ERA_NAME[p.era]}</span>
       <span class="seal" aria-hidden="true">참<br>잘했어요</span>
@@ -535,7 +636,7 @@ grid.addEventListener('click', e => { const c = e.target.closest('.card'); if(c)
 const dlg = $('dlg'); let cur = null;
 function openPerson(id){
   const p = P.find(x => x.id===id); cur = p; stopSpeak();
-  $('dImg').src = src(p); $('dImg').alt = p.name;
+  setImg($('dImg'), p); setCap(p); setFavBtn();
   $('dEra').textContent = ERA_NAME[p.era]; $('dEra').style.background = ERA_COLOR[p.era];
   $('dName').textContent = p.name; $('dNick').textContent = p.nick;
   $('dDid').innerHTML = p.did.map(([i,t]) => `<li><span aria-hidden="true">${i}</span><span>${t}</span></li>`).join('');
@@ -562,7 +663,7 @@ function askStep(d){
   const list = visible(); let i = list.findIndex(x => x.id===cur.id);
   const tgt = i<0 ? list[0] : list[(i+d+list.length)%list.length];
   cfDir = d;
-  $('cfImg').src = src(tgt); $('cfImg').alt = tgt.name;
+  setImg($('cfImg'), tgt);
   const nm = tgt.name.replace(/\(.*\)/,'');
   $('cfMsg').textContent = `${d<0?'이전':'다음'} 위인 ‘${tgt.name}’${josa(nm,'으로','로')} 넘어갈까요?`;
   $('cfWarn').textContent = done.has(cur.id) ? '' : `아직 ${cur.name} 도장을 받지 않았어요.`;
@@ -599,7 +700,7 @@ function newQ(){
   const others = shuffle(P.filter(p => p.id!==qAns.id)).slice(0,2);
   const opts = shuffle([qAns, ...others]);
   $('qClue').textContent = qAns.clue;
-  $('qOpts').innerHTML = opts.map(p => `<button class="opt" type="button" data-id="${p.id}"><img src="${src(p)}" alt=""><span>${p.name}</span></button>`).join('');
+  $('qOpts').innerHTML = opts.map(p => `<button class="opt" type="button" data-id="${p.id}"><img src="${src(p)}"${fbAttr(p)} alt=""><span>${p.name}</span></button>`).join('');
   $('qFb').textContent = ''; $('qFb').className = 'fb'; $('qSee').hidden = true;
   $('qScore').textContent = qTot ? `지금까지 ${qTot}문제 중 ${qGot}문제 맞혔어요` : '힌트를 읽고 알맞은 위인을 골라 보세요.';
 }
@@ -625,7 +726,7 @@ $('doneBtn').onclick = () => {
   if(done.has(cur.id)){ dlg.close(); return; }
   cLock = false;
   const others = shuffle(P.filter(p => p.id!==cur.id)).slice(0,2);
-  $('cImg').src = src(cur);
+  setImg($('cImg'), cur);
   $('cNames').innerHTML = shuffle([cur, ...others]).map(p => `<button class="nameb" type="button" data-id="${p.id}">${p.name}</button>`).join('');
   $('cFb').textContent = ''; $('cFb').className = 'fb'; $('cBack').hidden = false;
   $('view').hidden = true; $('chk').hidden = false; dlg.scrollTop = 0;
@@ -645,6 +746,62 @@ $('cNames').addEventListener('click', e => {
   }
 });
 $('cBack').onclick = () => { $('view').hidden = false; $('chk').hidden = true; };
+
+/* 사진 설명 */
+function setCap(p){
+  const cap = $('dCap'), img = $('dImg'), w = WIKI[p.id];
+  const fill = () => {
+    if(w && img.currentSrc && img.currentSrc.startsWith('http')){
+      const note = /초상|영정|삽화/.test(w.k) ? ' (실제 얼굴과 다를 수 있어요)' : '';
+      cap.innerHTML = `${w.k}${note}<br><a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(w.f)}" target="_blank" rel="noopener">위키미디어 공용</a>${w.a ? ' · ' + w.a : ''} · ${w.l}`;
+    } else if(p.av){
+      cap.textContent = p.av.sym ? '사진 대신 그림' : '수업용 상상 그림 (실제 얼굴이 아니에요)';
+    } else if(p.id === 'sejong'){
+      cap.textContent = '만 원권 도안 (얼굴 부분)';
+    } else {
+      cap.textContent = p.era === 'modern' ? '사진' : '수업 자료 그림 (실제 얼굴과 다를 수 있어요)';
+    }
+  };
+  cap.textContent = '';
+  if(img.complete) fill();
+  img.onload = fill; img.onerror = () => setTimeout(fill, 50);
+}
+
+/* 나도 배울래요 */
+let fav = [], notes = {}, lys = {};
+try { fav = JSON.parse(localStorage.getItem('wiin-fav') || '[]').filter(id => P.some(p => p.id===id)).slice(0,2); } catch(e) {}
+try { notes = JSON.parse(localStorage.getItem('wiin-notes') || '{}'); } catch(e) {}
+try { lys = JSON.parse(localStorage.getItem('wiin-ly') || '{}'); } catch(e) {}
+const saveLearn = () => { try { localStorage.setItem('wiin-fav', JSON.stringify(fav)); localStorage.setItem('wiin-notes', JSON.stringify(notes)); localStorage.setItem('wiin-ly', JSON.stringify(lys)); } catch(e) {} };
+function setFavBtn(){
+  const on = cur && fav.includes(cur.id);
+  $('favBtn').setAttribute('aria-pressed', on); $('favBtn').textContent = on ? '♥ 닮고 싶어요' : '♡ 닮고 싶어요';
+}
+$('favBtn').onclick = () => {
+  if(fav.includes(cur.id)) fav = fav.filter(x => x !== cur.id);
+  else { fav.push(cur.id); if(fav.length > 2) fav.shift(); }
+  saveLearn(); setFavBtn(); renderGrid(); renderLearn();
+};
+function renderLearn(){
+  const nums = ['①','②'];
+  $('slots').innerHTML = [0,1].map(i => {
+    const p = P.find(x => x.id === fav[i]);
+    if(!p) return `<div class="slot empty"><div><span class="no">${nums[i]}</span><br>아직 고르지 않았어요.<br>카드에서 ‘♡ 닮고 싶어요’를 눌러요.</div></div>`;
+    return `<div class="slot"><img src="${src(p)}"${fbAttr(p)} alt="${p.name}"><div style="min-width:0">
+      <span class="no">${nums[i]}</span><b>${p.name}</b><div class="nk">${ERA_NAME[p.era]} · ${p.nick}</div>
+      <label for="note-${p.id}">닮고 싶은 점</label><textarea id="note-${p.id}" data-note="${p.id}" placeholder="예) ${LYRIC[p.id]} 점">${(notes[p.id]||'').replace(/</g,'&lt;')}</textarea>
+      <div class="tr"><b style="display:inline;font-size:16px;color:var(--nok)">나도 해 볼래요</b> ${p.try}</div></div></div>`;
+  }).join('');
+  const picks = fav.map(id => P.find(p => p.id===id)).filter(Boolean);
+  const ex = (picks.length ? picks : [P.find(p=>p.id==='sejong'), P.find(p=>p.id==='leesunsin')]);
+  $('songEx').innerHTML = ex.map(p => `<li>${LYRIC[p.id]} ${shortName(p.name)}처럼 될 테야</li>`).join('') + (picks.length===1 ? `<li style="opacity:.6">한 명을 더 고르면 예시가 하나 더 나와요</li>` : '');
+  $('ly1').placeholder = '예) ' + `${LYRIC[ex[0].id]} ${shortName(ex[0].name)}처럼 될 테야`;
+  $('ly2').placeholder = ex[1] ? '예) ' + `${LYRIC[ex[1].id]} ${shortName(ex[1].name)}처럼 될 테야` : '두 번째 노랫말을 써 봐요';
+}
+$('slots').addEventListener('input', e => { const id = e.target.dataset.note; if(id){ notes[id] = e.target.value; saveLearn(); } });
+['ly1','ly2'].forEach(k => { $(k).value = lys[k] || ''; $(k).addEventListener('input', () => { lys[k] = $(k).value; saveLearn(); }); });
+$('favClear').onclick = () => { fav = []; saveLearn(); renderGrid(); renderLearn(); };
+if(/github\.io$/.test(location.hostname)){ $('printBtn').hidden = false; $('printBtn').onclick = () => window.print(); }
 /* 도장 지우기: 두 번 눌러 확인 */
 let resetArm = null;
 $('resetBtn').onclick = () => {
@@ -653,7 +810,7 @@ $('resetBtn').onclick = () => {
   b.textContent = '한 번 더 누르면 지워져요'; resetArm = setTimeout(() => { resetArm = null; b.textContent = '도장 지우기'; }, 3000);
 };
 
-renderEras(); renderGrid();
+renderEras(); renderGrid(); renderLearn();
 </script>
 
 </body>
