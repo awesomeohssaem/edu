@@ -154,6 +154,9 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 .slot .rm:hover{border-color:var(--hong);color:var(--hong)}
 .undo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;background:var(--soft);border-radius:12px;padding:10px 14px;font-size:17px}
 .undo .btn{font-size:17px;padding:6px 16px}
+.tb{display:flex;align-items:center;gap:14px;margin-top:6px;background:color-mix(in srgb,var(--hwang) 22%,var(--card));border:3px solid var(--hwang);border-radius:18px;padding:16px 20px;font-family:var(--display);font-size:clamp(22px,3.4vw,30px);line-height:1.3;text-wrap:balance}
+.tb b{font-weight:400;color:var(--hong)}
+.tb-ico{font-size:clamp(30px,5vw,40px);flex:none}
 .learn-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .wsname{display:none}
 @media print{
@@ -212,8 +215,7 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
       <p class="lead">‘한국을 빛낸 100명의 위인들’ 노래의 두 줄을 내가 고른 위인으로 바꿔 불러 봐요. ‘○○한 ○○○처럼 될 테야’ 모양으로 써요.</p>
       <div style="font-family:var(--display);font-size:17px;color:var(--muted)">이렇게 바꿔 볼 수 있어요</div>
       <ol id="songEx"></ol>
-      <label for="ly1">나의 노랫말 1</label><input id="ly1" type="text" autocomplete="off">
-      <label for="ly2">나의 노랫말 2</label><input id="ly2" type="text" autocomplete="off">
+      <div class="tb"><span class="tb-ico" aria-hidden="true">📖</span><span>교과서 <b>25쪽</b>에 만든 노랫말을 적어 보세요!</span></div>
     </div>
     <div class="undo" id="undoBar" hidden><span id="undoMsg"></span><button class="btn" id="undoBtn" type="button">↩ 되돌리기</button></div>
     <div class="learn-tools"><button class="btn ghost" id="favClear" type="button">고른 위인 모두 빼기</button><button class="btn" id="printBtn" type="button" hidden>학습지 인쇄</button></div>
@@ -816,11 +818,8 @@ function renderLearn(){
   const picks = fav.map(id => P.find(p => p.id===id)).filter(Boolean);
   const ex = (picks.length ? picks : [P.find(p=>p.id==='sejong'), P.find(p=>p.id==='leesunsin')]);
   $('songEx').innerHTML = ex.map(p => `<li>${LYRIC[p.id]} ${shortName(p.name)}처럼 될 테야</li>`).join('') + (picks.length===1 ? `<li style="opacity:.6">한 명을 더 고르면 예시가 하나 더 나와요</li>` : '');
-  $('ly1').placeholder = '예) ' + `${LYRIC[ex[0].id]} ${shortName(ex[0].name)}처럼 될 테야`;
-  $('ly2').placeholder = ex[1] ? '예) ' + `${LYRIC[ex[1].id]} ${shortName(ex[1].name)}처럼 될 테야` : '두 번째 노랫말을 써 봐요';
 }
 $('slots').addEventListener('input', e => { const id = e.target.dataset.note; if(id){ notes[id] = e.target.value; saveLearn(); } });
-['ly1','ly2'].forEach(k => { $(k).value = lys[k] || ''; $(k).addEventListener('input', () => { lys[k] = $(k).value; saveLearn(); }); });
 let undoFav = null, undoTimer = null;
 function changeFav(next, msg){
   undoFav = fav.slice(); fav = next; saveLearn(); renderGrid(); renderLearn();
