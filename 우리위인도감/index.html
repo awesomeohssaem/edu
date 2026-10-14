@@ -158,14 +158,45 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 .tb b{font-weight:400;color:var(--hong)}
 .tb-ico{font-size:clamp(30px,5vw,40px);flex:none}
 .learn-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-.wsname{display:none}
+/* 학습지 */
+.wsec{margin-top:28px;background:var(--card);border-radius:22px;padding:24px 20px;box-shadow:var(--shadow)}
+.wsec h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,36px);margin:0}
+.wsec .lead{color:var(--muted);margin:4px 0 14px}
+.wsbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.wsbar select{font:inherit;font-size:18px;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);max-width:100%}
+.wsnote{font-size:15px;color:var(--muted)}
+.ws-scroll{overflow-x:auto;padding:6px 0}
+.ws{--wl:#9AA0AA;width:186mm;min-height:265mm;margin:0 auto;background:#fff;color:#1E2025;padding:9mm 10mm;box-shadow:0 2px 12px rgba(0,0,0,.18);font-family:var(--body);display:flex;flex-direction:column;gap:4mm}
+.ws-head{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm;border-bottom:1.2mm solid #C8382E;padding-bottom:2.5mm}
+.ws-title{font-family:var(--display);font-size:9.5mm;line-height:1}
+.ws-title small{display:block;font-family:var(--body);font-size:3.6mm;color:#5E6470;margin-bottom:1.5mm}
+.ws-who{font-size:4.4mm;white-space:nowrap}
+.ws-top{display:grid;grid-template-columns:1.2fr 1fr;gap:5mm}
+.ws-box{border:0.6mm solid #3B3F47;border-radius:4mm;padding:3mm 4mm;position:relative}
+.ws-lab{font-family:var(--display);font-size:5.2mm;white-space:nowrap;display:flex;align-items:center;gap:2mm;margin-bottom:1.5mm}
+.ws-lab i{font-style:normal;display:inline-grid;place-items:center;width:7.5mm;height:7.5mm;border-radius:50%;color:#fff;font-size:4mm}
+.ws-draw{min-height:74mm;display:flex;flex-direction:column}
+.ws-draw .area{flex:1;border:0.4mm dashed #B8BEC8;border-radius:3mm;margin-top:1mm}
+.ws-right{display:flex;flex-direction:column;gap:5mm}
+.ws-name .val{font-family:var(--display);font-size:10mm;min-height:14mm;border-bottom:0.5mm solid var(--wl);display:flex;align-items:flex-end;padding:0 1mm 1mm;color:#1E2025}
+.ws-name .ws-era{font-size:3.6mm;color:#5E6470;margin-top:1.5mm}
+.ln{height:9.6mm;border-bottom:0.4mm solid var(--wl);display:flex;align-items:flex-end;gap:2mm;font-size:4.2mm;color:#8A8F99}
+.ln b{font-weight:400;color:#3B3F47;width:5mm;text-align:center}
+.ws-q .ln:first-of-type{}
+.ws-bubble{border-radius:6mm;background:#FBF3E2;border-color:#D9A02B}
+.ws-bubble:after{content:"";position:absolute;left:12mm;bottom:-4.2mm;border:4mm solid transparent;border-top-color:#D9A02B;border-bottom:0}
+.ws-foot{margin-top:auto;font-size:3.4mm;color:#8A8F99;text-align:right}
+@media (max-width:640px){.ws{transform-origin:top left}}
 @media print{
-  body{background:#fff;color:#000}
-  .wrap > :not(.learn){display:none!important}
-  .learn{box-shadow:none;padding:0}
-  .learn-tools,.slot .rm,.undo{display:none!important}
-  .wsname{display:block;font-size:18px;margin:6px 0 14px}
-  .slot textarea,.song input{border:1px solid #999;min-height:70px}
+  @page{size:A4;margin:10mm}
+  html,body{background:#fff!important;padding:0!important;margin:0!important}
+  :root{padding:0!important}
+  .wrap{padding:0!important;max-width:none!important}
+  .wrap > :not(#wsec), #wsec > :not(.ws-scroll), dialog{display:none!important}
+  #wsec{margin:0;padding:0;box-shadow:none;background:none}
+  .ws-scroll{overflow:visible;padding:0}
+  .ws{box-shadow:none;margin:0;width:190mm;height:265mm;min-height:0;overflow:hidden;transform:none!important;padding:8mm 9mm;break-inside:avoid;break-after:avoid}
+  html,body{height:auto!important;overflow:visible!important}
 }
 .card .tag{line-height:1.35}
 .yrs{margin:-8px 0 12px;font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -207,8 +238,7 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 
   <section class="learn" id="learn" aria-labelledby="learnTitle">
     <h2 id="learnTitle">나도 배울래요</h2>
-    <p class="wsname">2학년 (　　)반　이름: (　　　　　　　)</p>
-    <p class="lead">위인 카드를 열고 ‘♡ 닮고 싶어요’를 눌러 닮고 싶은 위인 두 명을 골라 보세요.</p>
+        <p class="lead">위인 카드를 열고 ‘♡ 닮고 싶어요’를 눌러 닮고 싶은 위인 두 명을 골라 보세요.</p>
     <div class="slots" id="slots"></div>
     <div class="song">
       <h3>노랫말 바꾸기</h3>
@@ -218,7 +248,36 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
       <div class="tb"><span class="tb-ico" aria-hidden="true">📖</span><span>교과서 <b>25쪽</b>에 만든 노랫말을 적어 보세요!</span></div>
     </div>
     <div class="undo" id="undoBar" hidden><span id="undoMsg"></span><button class="btn" id="undoBtn" type="button">↩ 되돌리기</button></div>
-    <div class="learn-tools"><button class="btn ghost" id="favClear" type="button">고른 위인 모두 빼기</button><button class="btn" id="printBtn" type="button" hidden>학습지 인쇄</button></div>
+    <div class="learn-tools"><button class="btn ghost" id="favClear" type="button">고른 위인 모두 빼기</button></div>
+  </section>
+  <section class="wsec" id="wsec" aria-labelledby="wsTitle">
+    <h2 id="wsTitle">학습지</h2>
+    <p class="lead">알아보고 싶은 위인을 고르면 이름이 들어간 학습지가 만들어져요. 비워 두면 아이가 직접 이름을 써요.</p>
+    <div class="wsbar">
+      <label for="wsPick" style="font-family:var(--display);font-size:18px">위인</label>
+      <select id="wsPick"><option value="">빈 학습지 (이름 직접 쓰기)</option></select>
+      <button class="btn" id="wsPrint" type="button">🖨 학습지 인쇄</button>
+      <span class="wsnote" id="wsNote"></span>
+    </div>
+    <div class="ws-scroll">
+      <div class="ws" id="ws">
+        <div class="ws-head">
+          <div class="ws-title"><small>우리 위인 도감</small>위인을 만나요</div>
+          <div class="ws-who">2학년 (　　)반 (　　)번　이름: ______________</div>
+        </div>
+        <div class="ws-top">
+          <div class="ws-box ws-draw"><div class="ws-lab"><i style="background:#2E7D5B">1</i>알아보고 싶은 위인을 그려요</div><div class="area"></div></div>
+          <div class="ws-right">
+            <div class="ws-box ws-name"><div class="ws-lab"><i style="background:#1E5C8A">2</i>위인의 이름</div><div class="val" id="wsName"></div><div class="ws-era" id="wsEra"></div></div>
+            <div class="ws-box"><div class="ws-lab"><i style="background:#7A4FA0">3</i>위인에게 배울 점</div><div class="ln"></div><div class="ln"></div><div class="ln"></div></div>
+          </div>
+        </div>
+        <div class="ws-box"><div class="ws-lab"><i style="background:#D9A02B">4</i>이런 일을 했어요</div><div class="ln"><b>①</b></div><div class="ln"><b>②</b></div><div class="ln"><b>③</b></div></div>
+        <div class="ws-box"><div class="ws-lab"><i style="background:#C8382E">5</i>위인에게 질문! (궁금한 점)</div><div class="ln"><b>Q</b></div><div class="ln"></div></div>
+        <div class="ws-box ws-bubble"><div class="ws-lab"><i style="background:#3B3F47">6</i>위인에게 하고 싶은 말</div><div class="ln"></div><div class="ln"></div></div>
+        <div class="ws-foot">우리 위인 도감</div>
+      </div>
+    </div>
   </section>
   <p class="foot">노래 ‘한국을 빛낸 100명의 위인들’에 나오는 대표 위인과, 오늘날 세계에 우리나라를 빛낸 인물을 담았어요. ‘상상 그림’은 진짜 얼굴이 남아 있지 않거나 사진을 넣지 못해 새로 그린 캐릭터예요.<br>설명은 초등학교 2학년이 읽기 쉽도록 짧게 풀어 썼어요. ‘○○라고 전해져요’는 옛이야기로 내려오는 내용이에요.</p>
 </div>
@@ -836,7 +895,25 @@ $('slots').addEventListener('click', e => {
   changeFav(fav.filter(x => x !== b.dataset.rm), `${p.name}${josa(shortName(p.name),'을','를')} 뺐어요.`);
 });
 $('favClear').onclick = () => { if(!fav.length) return; changeFav([], '고른 위인을 모두 뺐어요.'); };
-if(/github\.io$/.test(location.hostname)){ $('printBtn').hidden = false; $('printBtn').onclick = () => window.print(); }
+
+/* 학습지 */
+$('wsPick').innerHTML += P.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+let wsId = '';
+try { wsId = localStorage.getItem('wiin-ws') || ''; } catch(e) {}
+if(!P.some(p => p.id === wsId)) wsId = '';
+function renderWs(){
+  $('wsPick').value = wsId;
+  const p = P.find(x => x.id === wsId);
+  $('wsName').textContent = p ? p.name : '';
+  $('wsEra').textContent = p ? `${ERA_NAME[p.era]} · ${(YEARS[p.id]||'? ~ ?').replace(/년/g,'').replace(/\s*~\s*/,'~')}` : '';
+}
+$('wsPick').onchange = () => { wsId = $('wsPick').value; try { localStorage.setItem('wiin-ws', wsId); } catch(e) {} renderWs(); };
+const canPrint = /github\.io$/.test(location.hostname) || location.protocol === 'file:';
+if(canPrint){ $('wsPrint').onclick = () => window.print(); }
+else { $('wsPrint').hidden = true; $('wsNote').textContent = '인쇄는 GitHub 주소(awesomeohssaem.github.io/edu/우리위인도감)에서 할 수 있어요.'; }
+function fitWs(){ const box = document.querySelector('.ws-scroll'), ws = $('ws'); ws.style.transform=''; ws.style.marginBottom='';
+  const s = Math.min(1, box.clientWidth / ws.offsetWidth); if(s < 1){ ws.style.transform = `scale(${s})`; ws.style.transformOrigin='top left'; ws.style.marginBottom = `${-(1-s)*ws.offsetHeight}px`; } }
+window.addEventListener('resize', fitWs);
 /* 도장 지우기: 두 번 눌러 확인 */
 let resetArm = null;
 $('resetBtn').onclick = () => {
@@ -845,7 +922,7 @@ $('resetBtn').onclick = () => {
   b.textContent = '한 번 더 누르면 지워져요'; resetArm = setTimeout(() => { resetArm = null; b.textContent = '도장 지우기'; }, 3000);
 };
 
-renderEras(); renderGrid(); renderLearn();
+renderEras(); renderGrid(); renderLearn(); renderWs(); fitWs();
 </script>
 
 </body>
