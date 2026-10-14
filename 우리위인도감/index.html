@@ -631,7 +631,7 @@ function renderGrid(){
       <span class="band" style="background:${ERA_COLOR[p.era]}"></span>
       <img class="ph" src="${src(p)}"${fbAttr(p)} alt="${p.name}" loading="lazy"><span class="badge">${badge(p, !!WIKI[p.id])}</span>${fav.includes(p.id)?'<span class="heart" aria-label="닮고 싶은 위인">♥</span>':''}
       <span class="nm">${p.name}</span>
-      <span class="tag">${ERA_NAME[p.era]}<br>${YEARS[p.id]||''}</span>
+      <span class="tag">${ERA_NAME[p.era]}</span>
       <span class="seal" aria-hidden="true">참<br>잘했어요</span>
     </button>`).join('');
   $('cnt').textContent = `${done.size} / ${P.length}`;
