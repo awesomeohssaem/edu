@@ -148,13 +148,18 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 .song ol{margin:10px 0 14px;padding-left:24px;display:grid;gap:6px}
 .song li{font-family:var(--display);font-size:clamp(19px,2.6vw,23px);background:var(--soft);border-radius:10px;padding:6px 12px}
 .song label{display:block;font-family:var(--display);font-size:17px;margin-top:10px}
+.slot{position:relative}
+.slot .rm{position:absolute;right:8px;top:8px;border:2px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:2px 12px;font-family:var(--display);font-size:16px}
+.slot .rm:hover{border-color:var(--hong);color:var(--hong)}
+.undo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;background:var(--soft);border-radius:12px;padding:10px 14px;font-size:17px}
+.undo .btn{font-size:17px;padding:6px 16px}
 .learn-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .wsname{display:none}
 @media print{
   body{background:#fff;color:#000}
   .wrap > :not(.learn){display:none!important}
   .learn{box-shadow:none;padding:0}
-  .learn-tools{display:none}
+  .learn-tools,.slot .rm,.undo{display:none!important}
   .wsname{display:block;font-size:18px;margin:6px 0 14px}
   .slot textarea,.song input{border:1px solid #999;min-height:70px}
 }
@@ -209,7 +214,8 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
       <label for="ly1">나의 노랫말 1</label><input id="ly1" type="text" autocomplete="off">
       <label for="ly2">나의 노랫말 2</label><input id="ly2" type="text" autocomplete="off">
     </div>
-    <div class="learn-tools"><button class="btn ghost" id="favClear" type="button">고른 위인 지우기</button><button class="btn" id="printBtn" type="button" hidden>학습지 인쇄</button></div>
+    <div class="undo" id="undoBar" hidden><span id="undoMsg"></span><button class="btn" id="undoBtn" type="button">↩ 되돌리기</button></div>
+    <div class="learn-tools"><button class="btn ghost" id="favClear" type="button">고른 위인 모두 빼기</button><button class="btn" id="printBtn" type="button" hidden>학습지 인쇄</button></div>
   </section>
   <p class="foot">노래 ‘한국을 빛낸 100명의 위인들’에 나오는 대표 위인과, 오늘날 세계에 우리나라를 빛낸 인물을 담았어요. ‘상상 그림’은 진짜 얼굴이 남아 있지 않거나 사진을 넣지 못해 새로 그린 캐릭터예요.<br>설명은 초등학교 2학년이 읽기 쉽도록 짧게 풀어 썼어요. ‘○○라고 전해져요’는 옛이야기로 내려오는 내용이에요.</p>
 </div>
@@ -801,6 +807,7 @@ function renderLearn(){
     const p = P.find(x => x.id === fav[i]);
     if(!p) return `<div class="slot empty"><div><span class="no">${nums[i]}</span><br>아직 고르지 않았어요.<br>카드에서 ‘♡ 닮고 싶어요’를 눌러요.</div></div>`;
     return `<div class="slot"><img src="${src(p)}"${fbAttr(p)} alt="${p.name}"><div style="min-width:0">
+      <button class="rm" type="button" data-rm="${p.id}" aria-label="${p.name} 빼기">✕ 빼기</button>
       <span class="no">${nums[i]}</span><b>${p.name}</b><div class="nk">${ERA_NAME[p.era]} · ${p.nick}</div>
       <label for="note-${p.id}">닮고 싶은 점</label><textarea id="note-${p.id}" data-note="${p.id}" placeholder="예) ${LYRIC[p.id]} 점">${(notes[p.id]||'').replace(/</g,'&lt;')}</textarea>
       <div class="tr"><b style="display:inline;font-size:16px;color:var(--nok)">나도 해 볼래요</b> ${p.try}</div></div></div>`;
@@ -813,7 +820,22 @@ function renderLearn(){
 }
 $('slots').addEventListener('input', e => { const id = e.target.dataset.note; if(id){ notes[id] = e.target.value; saveLearn(); } });
 ['ly1','ly2'].forEach(k => { $(k).value = lys[k] || ''; $(k).addEventListener('input', () => { lys[k] = $(k).value; saveLearn(); }); });
-$('favClear').onclick = () => { fav = []; saveLearn(); renderGrid(); renderLearn(); };
+let undoFav = null, undoTimer = null;
+function changeFav(next, msg){
+  undoFav = fav.slice(); fav = next; saveLearn(); renderGrid(); renderLearn();
+  $('undoMsg').textContent = msg; $('undoBar').hidden = false;
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => { $('undoBar').hidden = true; undoFav = null; }, 10000);
+}
+$('undoBtn').onclick = () => {
+  if(!undoFav) return; fav = undoFav; undoFav = null; clearTimeout(undoTimer);
+  $('undoBar').hidden = true; saveLearn(); renderGrid(); renderLearn();
+};
+$('slots').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]'); if(!b) return;
+  const p = P.find(x => x.id === b.dataset.rm);
+  changeFav(fav.filter(x => x !== b.dataset.rm), `${p.name}${josa(shortName(p.name),'을','를')} 뺐어요.`);
+});
+$('favClear').onclick = () => { if(!fav.length) return; changeFav([], '고른 위인을 모두 뺐어요.'); };
 if(/github\.io$/.test(location.hostname)){ $('printBtn').hidden = false; $('printBtn').onclick = () => window.print(); }
 /* 도장 지우기: 두 번 눌러 확인 */
 let resetArm = null;
