@@ -127,6 +127,7 @@ dialog::backdrop{background:rgba(20,22,26,.55)}
 .cap a{color:inherit}
 .fav{border:2px solid var(--hong);color:var(--hong);background:transparent;border-radius:999px;padding:6px 16px;font-family:var(--display);font-size:18px}
 .fav[aria-pressed="true"]{background:var(--hong);color:#fff}
+.card .badge{position:absolute;right:16px;bottom:96px;background:rgba(255,255,255,.92);color:#3B3F47;border-radius:999px;padding:3px 10px;font-size:12px;font-family:var(--display);box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .card .heart{position:absolute;left:16px;top:16px;width:34px;height:34px;border-radius:50%;background:var(--hong);color:#fff;display:grid;place-items:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .learn{margin-top:40px;background:var(--card);border-radius:22px;padding:24px 20px;box-shadow:var(--shadow)}
 .learn h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,36px);margin:0}
@@ -268,10 +269,10 @@ const IMG = {"image1": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDA
 function avatar(o){
   if(o.sym){
     const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320"><rect width="240" height="320" fill="${o.bg}"/>
-      <circle cx="120" cy="150" r="88" fill="#FFFFFF" opacity=".55"/><circle cx="196" cy="48" r="44" fill="#FFFFFF" opacity=".3"/>
-      <text x="120" y="182" font-size="96" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${o.sym}</text>
-      <text x="120" y="272" font-family="Jua, sans-serif" font-size="26" fill="#3B3F47" text-anchor="middle">${o.cap}</text>
-      <rect x="148" y="290" width="82" height="22" rx="11" fill="#FFFFFF" opacity=".85"/><text x="189" y="306" font-family="Jua, sans-serif" font-size="13" fill="#5E6470" text-anchor="middle">사진 대신 그림</text></svg>`;
+      <circle cx="120" cy="128" r="80" fill="#FFFFFF" opacity=".55"/><circle cx="196" cy="48" r="44" fill="#FFFFFF" opacity=".3"/>
+      <text x="120" y="160" font-size="88" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${o.sym}</text>
+      <text x="120" y="246" font-family="Jua, sans-serif" font-size="26" fill="#3B3F47" text-anchor="middle">${o.cap}</text>
+      </svg>`;
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
   }
   const D='#2A2420', skin='#F3CFAB', robe=o.robe||'#1E5C8A', bg=o.bg||'#EAF0F4';
@@ -318,7 +319,7 @@ function avatar(o){
     ${beard}${stache}
     <path d="M108 194 Q120 204 132 194" stroke="#8E3B2E" stroke-width="3.5" fill="none" stroke-linecap="round"/>
     ${glasses}${o.woman ? '' : ''}
-    <rect x="160" y="290" width="70" height="22" rx="11" fill="#FFFFFF" opacity=".85"/><text x="195" y="306" font-family="Jua, sans-serif" font-size="13" fill="#5E6470" text-anchor="middle">상상 그림</text></svg>`;
+    </svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
@@ -593,8 +594,14 @@ const src = p => WIKI[p.id] ? WIKI[p.id].u : local(p);
 const fbAttr = p => WIKI[p.id] ? ` data-fb="${p.id}"` : '';
 document.addEventListener('error', e => {
   const el = e.target; if(el.tagName !== 'IMG' || !el.dataset.fb) return;
-  const p = P.find(x => x.id === el.dataset.fb); delete el.dataset.fb; if(p) el.src = local(p);
+  const p = P.find(x => x.id === el.dataset.fb); delete el.dataset.fb; if(p){ el.src = local(p); const bd = el.parentElement && el.parentElement.querySelector('.badge'); if(bd) bd.textContent = badge(p, false); }
 }, true);
+function badge(p, wiki){
+  if(wiki) return '위키백과 대표 이미지';
+  if(p.av) return p.av.sym ? '사진 대신 그림' : '수업용 상상 그림';
+  if(p.id === 'sejong') return '만 원권 도안';
+  return p.era === 'modern' ? '사진' : '수업 자료 그림';
+}
 function setImg(el, p){ if(WIKI[p.id]) el.dataset.fb = p.id; else delete el.dataset.fb; el.src = src(p); el.alt = p.name; }
 const LYRIC = {"dangun": "널리 사람을 돕는", "jumong": "활을 잘 쏘는 씩씩한", "onjo": "새 나라를 연 용기 있는", "hyeok": "세상을 밝게 다스린", "gwanggaeto": "넓은 땅을 달려간 씩씩한", "leesabu": "꾀를 내어 문제를 푼", "gyebaek": "끝까지 포기하지 않는", "kimyusin": "날마다 몸과 마음을 닦은", "wonhyo": "마음먹기의 힘을 깨달은", "daejoyeong": "흩어진 사람들을 이끈", "jangbogo": "바다를 누비며 사람을 지킨", "seohui": "차분한 말로 나라 지킨", "gangamchan": "나이 들어도 앞장선", "choimuseon": "될 때까지 연구한", "munikjeom": "모두를 따뜻하게 해 준", "choiyoung": "욕심 없이 바르게 산", "sejong": "모두를 위해 한글 만든", "hwanghui": "남을 배려하는 마음 따뜻한", "jangyeongsil": "재주로 꿈을 펼친", "saimdang": "작은 것도 자세히 본", "leehwang": "배움을 나누는", "leei": "미리미리 준비하는", "leesunsin": "용감하게 바다 지킨", "gwakjaewoo": "스스로 나서 고장 지킨", "kimsimin": "힘을 모아 진주성 지킨", "gwonyul": "모두와 힘을 합친", "hanseokbong": "연습을 멈추지 않은", "kimhongdo": "우리 모습을 즐겁게 그린", "jeongjo": "백성 말에 귀 기울인", "jeongyakyong": "백성을 생각한 똑똑한", "kimjeongho": "꼼꼼하게 길을 담은", "jeonbongjun": "작지만 단단하고 용감한", "jiseokyeong": "아픈 사람을 지켜 준", "sonbyeonghui": "모든 사람을 귀하게 여긴", "jusigyeong": "우리말을 아낀", "kimgu": "아름다운 나라를 꿈꾼", "anchangho": "거짓 없이 정직한", "anjunggeun": "날마다 책을 가까이한", "bangjeonghwan": "어린이를 소중히 여긴", "yugwansun": "용기 내어 목소리 낸", "leejungseop": "어디서든 그림 그린", "yundongju": "부끄럼 없이 바르게 산", "songijeong": "끝까지 힘차게 달린", "parkseri": "맨발로도 도전한", "parkjisung": "지치지 않고 뛰는", "bongjoonho": "나만의 이야기를 만든", "kimyuna": "넘어져도 다시 일어난", "hankang": "마음을 글로 전한"};
 const shortName = n => n.replace(/\(.*\)/,'');
@@ -618,7 +625,7 @@ function renderGrid(){
   grid.innerHTML = visible().map(p => `
     <button class="card ${done.has(p.id)?'done':''}" type="button" data-id="${p.id}" aria-label="${p.name} 알아보기">
       <span class="band" style="background:${ERA_COLOR[p.era]}"></span>
-      <img class="ph" src="${src(p)}"${fbAttr(p)} alt="${p.name}" loading="lazy">${fav.includes(p.id)?'<span class="heart" aria-label="닮고 싶은 위인">♥</span>':''}
+      <img class="ph" src="${src(p)}"${fbAttr(p)} alt="${p.name}" loading="lazy"><span class="badge">${badge(p, !!WIKI[p.id])}</span>${fav.includes(p.id)?'<span class="heart" aria-label="닮고 싶은 위인">♥</span>':''}
       <span class="nm">${p.name}</span>
       <span class="tag">${ERA_NAME[p.era]}</span>
       <span class="seal" aria-hidden="true">참<br>잘했어요</span>
